@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "^(?!generate\.php$).+\.php$">
+  Require all denied
+</FilesMatch>

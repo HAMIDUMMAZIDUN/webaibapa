@@ -1,0 +1,8 @@
+# Mengabaikan file konfigurasi lokal yang berisi API Key rahasia
+private/config.php
+
+# Mengabaikan file log/temp lokal
+*.log
+.DS_Store
+.vscode/
+.idea/

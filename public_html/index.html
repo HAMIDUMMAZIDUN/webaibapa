@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b2d70">
+  <meta name="description" content="Hidayat AI Generator — asisten AI akademik, pendidikan, penelitian, dan administrasi.">
+  <title>Hidayat AI Generator</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/logo.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Halaman Login & Auth (Google SSO + Lupa Password) -->
+  <div id="authScreen" class="auth-container" style="display: none;">
+    <!-- 1. Card Login -->
+    <div id="loginCard" class="auth-card">
+      <h2 class="auth-title">Hidayat AI</h2>
+      <p class="auth-subtitle">Workspace AI Akademik & Administrasi</p>
+      
+      <form id="loginForm" class="auth-form">
+        <div class="auth-field-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="nama@email.com" required autocomplete="email" />
+        </div>
+        <div class="auth-field-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="loginPassword">Password</label>
+            <a onclick="showAuthCard('forgot')" class="auth-link" style="font-size: 11px;">Lupa Password?</a>
+          </div>
+          <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="auth-btn-primary">Masuk</button>
+      </form>
+
+      <div class="auth-divider">atau masuk dengan</div>
+
+      <button id="googleSsoBtn" class="auth-btn-google">
+        <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-.1.84-2.45 2.4v2h3.96c2.31-2.13 3.65-5.27 3.65-8.25z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.97-1.08 7.96-2.91l-3.96-2.07c-1.12.75-2.5 1.2-4 1.2-3.07 0-5.68-2.08-6.61-4.88H1.31v3.2c1.98 3.93 6.06 6.46 10.69 6.46z"/>
+          <path fill="#FBBC05" d="M5.39 14.34c-.24-.72-.37-1.49-.37-2.34s.13-1.62.37-2.34V6.46H1.31C.47 8.13 0 10.01 0 12s.47 3.87 1.31 5.54l4.08-3.2z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.22 0 12 0 7.37 0 3.29 2.53 1.31 6.46l4.08 3.2c.93-2.8 3.54-4.91 6.61-4.91z"/>
+        </svg>
+        Masuk dengan Google
+      </button>
+
+      <div class="auth-footer">
+        Belum punya akun? <a onclick="showAuthCard('register')" class="auth-link">Daftar</a>
+      </div>
+    </div>
+
+    <!-- 2. Card Register -->
+    <div id="registerCard" class="auth-card" style="display: none;">
+      <h2 class="auth-title">Daftar Akun</h2>
+      <p class="auth-subtitle">Mulai asisten AI akademik Anda</p>
+      
+      <form id="registerForm" class="auth-form">
+        <div class="auth-field-group">
+          <label for="registerEmail">Email</label>
+          <input type="email" id="registerEmail" placeholder="nama@email.com" required autocomplete="email" />
+        </div>
+        <div class="auth-field-group">
+          <label for="registerPassword">Password</label>
+          <input type="password" id="registerPassword" placeholder="Min. 6 karakter" required autocomplete="new-password" />
+        </div>
+        <button type="submit" class="auth-btn-primary">Daftar</button>
+      </form>
+
+      <div class="auth-footer">
+        Sudah punya akun? <a onclick="showAuthCard('login')" class="auth-link">Masuk</a>
+      </div>
+    </div>
+
+    <!-- 3. Card Forgot Password -->
+    <div id="forgotPasswordCard" class="auth-card" style="display: none;">
+      <h2 class="auth-title">Lupa Password</h2>
+      <p class="auth-subtitle">Kirim link reset password langsung ke email Anda</p>
+      
+      <form id="forgotForm" class="auth-form">
+        <div class="auth-field-group">
+          <label for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" placeholder="nama@email.com" required autocomplete="email" />
+        </div>
+        <button type="submit" class="auth-btn-primary">Kirim Link Reset</button>
+      </form>
+
+      <div class="auth-footer">
+        <a onclick="showAuthCard('login')" class="auth-link">← Kembali ke Login</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Navigasi Global Premium -->
+  <header style="background: linear-gradient(135deg, #071d4a 0%, #092b6d 100%); color: #fff; padding: 12px 24px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div>
+        <strong style="font-size: 1.15em; display: block; letter-spacing: 0.5px; font-weight: 700;">Hidayat AI</strong>
+        <span style="font-size: 0.7em; color: #bfd6ff; display: block; margin-top: 1px; font-weight: 500;">Workspace AI Akademik & Administrasi</span>
+      </div>
+    </div>
+    
+    <!-- Tab Navigasi Halaman -->
+    <nav style="display: flex; gap: 8px;">
+      <button class="nav-tab active" data-page="dashboard">🏠 Beranda</button>
+      <button class="nav-tab" data-page="generator">🧠 AI Workspace</button>
+      <button class="nav-tab" data-page="projects">📁 Riwayat & Proyek</button>
+    </nav>
+    
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <!-- Search Input -->
+      <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; width: 180px;">
+        <span style="color: #bfd6ff; font-size: 0.85em;">⌕</span>
+        <input id="globalSearch" placeholder="Cari..." autocomplete="off" style="border: none; background: transparent; color: #fff; font-size: 0.85em; outline: none; width: 100%; padding: 0; margin: 0;" />
+      </div>
+      
+      <!-- User Profile -->
+      <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid rgba(255,255,255,0.15); padding-left: 16px;">
+        <span id="userAvatar" class="avatar" style="width: 34px; height: 34px; border-radius: 50%; background: #3b82f6; color: white; display: grid; place-items: center; font-weight: 700; font-size: 0.9em; margin: 0;">H</span>
+        <div style="display: flex; flex-direction: column;">
+          <strong id="userName" style="font-size: 0.85em; color: #fff; font-weight: 600; line-height: 1.2;">Hidayat, M.Pd.</strong>
+          <a href="#" id="logoutBtn" style="font-size: 0.72em; color: #ff8a8a; text-decoration: none; font-weight: 600; margin-top: 1px; transition: color 0.2s;" onmouseover="this.style.color='#ffb3b3'" onmouseout="this.style.color='#ff8a8a'">Keluar ➔</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-shell" style="min-height: calc(100vh - 66px); display: flex; flex-direction: column;">
+    <main class="main" style="width: 100%; max-width: 1300px; margin: 0 auto; padding: 20px 24px; box-sizing: border-box;">
+      
+      <!-- Halaman 1: Beranda / Dashboard -->
+      <div class="app-page" id="page-dashboard">
+        <div class="hero" style="margin-bottom: 20px;">
+          <div>
+            <span class="eyebrow">ASISTEN AI TERPADU</span>
+            <h1>Selamat Datang, Hidayat 👋</h1>
+            <p>Kelola disertasi, jurnal, penelitian, pembelajaran, administrasi, presentasi, dan desain dalam satu aplikasi.</p>
+            <button class="primary" onclick="switchToPage('generator')">Mulai Sekarang →</button>
+          </div>
+          <div class="hero-art">
+            <div class="ai-chip">AI</div>
+            <div class="laptop">▦<small>Smart Workspace</small></div>
+            <div class="books">▰<br>▰<br>▰</div>
+          </div>
+        </div>
+
+        <section class="stats" id="stats" style="margin-bottom: 20px;"></section>
+
+        <section class="panel features" style="margin-bottom: 20px;">
+          <div class="panel-head compact">
+            <h2>Fitur Unggulan</h2>
+            <span>Pilih kategori untuk mulai membuat dokumen dengan AI</span>
+          </div>
+          <div id="features" class="feature-grid"></div>
+        </section>
+      </div>
+
+      <!-- Halaman 2: AI Workspace (Generator) -->
+      <div class="app-page" id="page-generator" style="display: none; max-width: 950px; margin: 0 auto;">
+        <section class="panel generator-panel" id="generator" style="width: 100%;">
+          <div class="panel-head">
+            <div>
+              <span class="eyebrow dark">GENERATOR UTAMA</span>
+              <h2>Buat konten dengan AI</h2>
+            </div>
+            <span class="status-dot"><i></i> Siap</span>
+          </div>
+          <div class="form-grid">
+            <label>Kategori<select id="category"></select></label>
+            <label>Bahasa<select id="language"><option>Bahasa Indonesia</option><option>English</option><option>Bahasa Arab</option><option>Sunda</option></select></label>
+            <label>Gaya<select id="tone"><option>Profesional</option><option>Akademik</option><option>Formal</option><option>Ringkas</option><option>Persuasif</option><option>Kreatif</option></select></label>
+          </div>
+          
+          <!-- Panel Sumber Terintegrasi -->
+          <div class="sources-panel" style="margin-top: 20px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.05em; color: #0f172a; display: flex; align-items: center; gap: 6px;">📚 Sumber</h3>
+              <span style="font-size: 0.8em; color: #64748b;" id="sourcesCount">0 sumber</span>
+            </div>
+            
+            <!-- Button + Tambahkan Sumber -->
+            <button type="button" id="toggleUploadZoneBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; font-weight: 600; color: #0f172a; cursor: pointer; transition: all 0.2s;">
+              ➕ Tambahkan sumber
+            </button>
+            
+            <!-- Collapsible Drag & Drop Card -->
+            <div id="dropZone" style="display: none; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 25px 15px; text-align: center; background: #f8fafc; transition: all 0.2s ease; cursor: pointer; position: relative;">
+              <div style="margin-bottom: 15px; pointer-events: none;">
+                <div style="font-size: 1.1em; color: #1e293b; font-weight: 600; margin-bottom: 4px;">atau lepaskan file Anda</div>
+                <div style="font-size: 0.8em; color: #64748b;">pdf, word, excel, gambar, teks, dan link web</div>
+              </div>
+              
+              <!-- Action Pills -->
+              <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; position: relative; z-index: 10;">
+                <button type="button" id="btnUploadFile" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.8em; font-weight: 500; color: #334155; cursor: pointer;">
+                  📤 Upload file
+                </button>
+                <button type="button" id="btnUploadWeb" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.8em; font-weight: 500; color: #334155; cursor: pointer;">
+                  🔗 Situs
+                </button>
+                <button type="button" id="btnUploadDrive" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.8em; font-weight: 500; color: #334155; cursor: pointer;">
+                  🔺 Drive
+                </button>
+                <button type="button" id="btnPasteText" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.8em; font-weight: 500; color: #334155; cursor: pointer;">
+                  📋 Teks yang disalin
+                </button>
+              </div>
+              <input type="file" id="refCardFileInput" accept=".txt,.csv,.pdf,.docx,.xlsx" style="display: none;" />
+            </div>
+
+            <!-- Telusuri sumber baru di web (Second Screenshot) -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 0.82em; color: #475569; font-weight: 600;">Telusuri sumber baru di web</span>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="text" id="webSearchQuery" placeholder="Ketik kata kunci pencarian..." style="font-size: 0.85em; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; flex: 1; margin: 0; background: #fff;" />
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div style="display: flex; gap: 6px;">
+                  <select id="searchEngineSelect" style="font-size: 0.8em; padding: 6px 12px; border-radius: 20px; border: 1px solid #cbd5e1; background: #fff; color: #334155; font-weight: 600; cursor: pointer; width: auto; margin: 0;">
+                    <option value="wikipedia">🌐 Web</option>
+                    <option value="web">🔍 Google</option>
+                  </select>
+                  <select id="searchTypeSelect" style="font-size: 0.8em; padding: 6px 12px; border-radius: 20px; border: 1px solid #cbd5e1; background: #fff; color: #334155; font-weight: 600; cursor: pointer; width: auto; margin: 0;">
+                    <option value="cepat">⚡ Riset Cepat</option>
+                    <option value="dalam">📚 Riset Dalam</option>
+                  </select>
+                </div>
+                <button type="button" id="btnWebSearchSubmit" style="background: #3b82f6; border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(59,130,246,0.3); font-size: 1.1em; font-weight: bold; margin: 0;">
+                  ➔
+                </button>
+              </div>
+            </div>
+            
+            <!-- List header with Select All -->
+            <div id="sourcesHeader" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; color: #475569; padding: 4px 0;" hidden>
+              <span style="font-weight: 600;">Daftar Referensi</span>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; color: #0b2d70;">
+                <span>Pilih semua</span>
+                <input type="checkbox" id="selectAllSources" checked style="cursor: pointer; width: 15px; height: 15px;" />
+              </label>
+            </div>
+            
+            <!-- Sources List Container -->
+            <div id="sourcesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+
+          <label class="prompt-label">Jelaskan kebutuhan Anda<textarea id="prompt" rows="7" placeholder="Contoh: Buatkan kerangka proposal disertasi tentang implementasi manajemen kelembagaan pesantren, lengkap dengan gap penelitian, pertanyaan penelitian POAC, teori utama, metode, dan novelty."></textarea></label>
+          <div class="prompt-tools"><button class="secondary" id="exampleBtn">Isi Contoh</button><button class="secondary" id="clearBtn">Bersihkan</button><button class="primary generate" id="generateBtn">✨ Generate Sekarang</button></div>
+          <div class="notice" id="notice" hidden></div>
+          <div class="output-wrap" id="outputWrap" hidden>
+            <div class="output-head"><h3>Hasil AI</h3><div style="display: flex; gap: 4px;"><button class="tiny" id="copyBtn">Salin</button><button class="tiny" id="wordBtn">Word</button><button class="tiny" id="excelBtn">Excel</button><button class="tiny" id="txtBtn">TXT</button><button class="tiny" id="printBtn">PDF/Cetak</button></div></div>
+            <article id="output" class="output"></article>
+          </div>
+        </section>
+      </div>
+
+      <!-- Halaman 3: Riwayat & Proyek -->
+      <div class="app-page" id="page-projects" style="display: none;">
+        <div class="workspace-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <!-- Stack Kiri: Aksi Cepat & Proyek -->
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <section class="panel quick">
+              <h3>Aksi Cepat</h3>
+              <div id="quickActions" style="margin-top: 13px;"></div>
+            </section>
+            
+            <section class="panel">
+              <div class="panel-head compact">
+                <h3>Proyek Saya</h3>
+                <div style="display: flex; gap: 8px;">
+                  <button class="link-btn" id="deleteSelectedProjectsBtn" style="display: none; color: #ef4444;">Hapus Terpilih</button>
+                  <button class="link-btn" id="clearProjectsBtn" style="color: #ef4444;">Hapus Semua</button>
+                  <button class="link-btn" id="newProjectBtn">+ Baru</button>
+                </div>
+              </div>
+              <div id="projects" class="project-list"></div>
+            </section>
+          </div>
+
+          <!-- Stack Kanan: Aktivitas & Dokumen -->
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <section class="panel">
+              <div class="panel-head compact">
+                <h3>Aktivitas Terbaru</h3>
+                <div style="display: flex; gap: 8px;">
+                  <button class="link-btn" id="deleteSelectedHistoryBtn" style="display: none; color: #ef4444;">Hapus Terpilih</button>
+                  <button class="link-btn" id="clearHistoryBtn">Hapus Semua</button>
+                </div>
+              </div>
+              <div id="history" class="history"></div>
+            </section>
+            
+            <section class="panel">
+              <div class="panel-head compact">
+                <h3>Dokumen Terakhir</h3>
+                <div style="display: flex; gap: 8px;">
+                  <button class="link-btn" id="deleteSelectedDocsBtn" style="display: none; color: #ef4444;">Hapus Terpilih</button>
+                  <button class="link-btn" id="clearDocsBtn">Hapus Semua</button>
+                </div>
+              </div>
+              <div class="document-list" id="documents"></div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <dialog id="projectDialog">
+    <form method="dialog" id="projectForm">
+      <h3>Tambah Proyek</h3>
+      <label>Nama proyek<input id="projectName" required maxlength="80" placeholder="Contoh: Disertasi MPI"></label>
+      <label>Kategori<select id="projectCategory"></select></label>
+      <div class="dialog-actions"><button value="cancel" class="secondary">Batal</button><button value="default" class="primary" id="saveProjectBtn">Simpan</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="webSourceDialog" style="border: none; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); width: 90%; max-width: 450px; background: #fff;">
+    <form method="dialog" style="display: flex; flex-direction: column; gap: 12px;">
+      <h3 style="margin: 0; font-size: 1.1em; color: #1e293b;">🔗 Tambahkan Link Web / Situs / Drive</h3>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85em; color: #475569;">
+        URL Website atau Share Link Drive:
+        <input type="url" id="refWebUrlInput" placeholder="https://example.com/artikel" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1em;" required />
+      </label>
+      <div style="font-size: 0.75em; color: #64748b; line-height: 1.4;">
+        Aplikasi akan membaca halaman web atau dokumen Drive publik ini dan mengekstrak isinya untuk dijadikan referensi AI.
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+        <button value="cancel" class="secondary" style="padding: 8px 16px; font-size: 0.9em; border-radius: 6px; cursor: pointer; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569;">Batal</button>
+        <button value="confirm" id="btnConfirmWebSource" class="primary" style="padding: 8px 16px; font-size: 0.9em; border-radius: 6px; cursor: pointer; background: #0b2d70; color: #fff; border: none;">Tambahkan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="manualSourceDialog" style="border: none; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); width: 90%; max-width: 500px; background: #fff;">
+    <form method="dialog" style="display: flex; flex-direction: column; gap: 12px;">
+      <h3 style="margin: 0; font-size: 1.1em; color: #1e293b;">📋 Tambahkan Teks Referensi</h3>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85em; color: #475569;">
+        Nama Sumber:
+        <input type="text" id="refManualNameInput" placeholder="Contoh: Kutipan Buku A" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1em;" required />
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85em; color: #475569;">
+        Konten Teks Referensi:
+        <textarea id="refManualContentInput" placeholder="Ketik atau paste isi referensi di sini..." rows="6" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1em; font-family: inherit; resize: vertical;" required></textarea>
+      </label>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+        <button value="cancel" class="secondary" style="padding: 8px 16px; font-size: 0.9em; border-radius: 6px; cursor: pointer; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569;">Batal</button>
+        <button value="confirm" id="btnConfirmManualSource" class="primary" style="padding: 8px 16px; font-size: 0.9em; border-radius: 6px; cursor: pointer; background: #0b2d70; color: #fff; border: none;">Tambahkan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Library untuk membaca dokumen di client-side -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "Hidayat AI Generator",
+  "short_name": "Hidayat AI",
+  "description": "Asisten AI akademik, pendidikan, penelitian, dan administrasi.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0b2d70",
+  "icons": [
+    {"src":"assets/logo.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
