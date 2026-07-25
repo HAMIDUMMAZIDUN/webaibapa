@@ -1,4 +1,23 @@
 Options -Indexes
-<FilesMatch "^(?!generate\.php$).+\.php$">
+
+# Deny access to all PHP files by default
+<FilesMatch "\.php$">
   Require all denied
 </FilesMatch>
+
+# Explicitly allow access to the specific API files
+<Files generate.php>
+  Require all granted
+</Files>
+
+<Files fetch_url.php>
+  Require all granted
+</Files>
+
+<Files get_config.php>
+  Require all granted
+</Files>
+
+<Files search_web.php>
+  Require all granted
+</Files>
