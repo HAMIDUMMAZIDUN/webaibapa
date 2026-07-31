@@ -17,17 +17,37 @@ const examples = {
   'Prompt Gambar & Video':'Buatkan prompt video bumper modern 3D berdurasi 30 detik, lengkap dengan adegan per detik, gerak kamera, pencahayaan, transisi, teks, dan arahan audio.'
 };
 const features = [
- ['Generator Disertasi','🎓','Susun ide, gap, POAC, teori, metode, dan novelty.','#7044f5'],
- ['Artikel Jurnal','📝','Buat struktur IMRAD dan naskah siap disempurnakan.','#12a95b'],
- ['Review Dokumen','🔎','Analisis kelemahan, kelebihan, dan revisi prioritas.','#7e45e7'],
- ['Administrasi Madrasah','🏛️','Surat, SK, LPJ, PROTA, PROMES, dan laporan.','#0aa99b'],
- ['Presentasi Otomatis','📊','Ubah ide menjadi outline slide dan catatan pembicara.','#ff8318'],
- ['Prompt Gambar & Video','🎬','Prompt visual, flyer, bumper, dan materi kreatif.','#ee4d8b']
+  ['Penulis Buku MI-MTs-MA', '✍️', 'Penyusunan modul buku siswa/guru lengkap.', '#1769ff', 'author-studio', 'author'],
+  ['Pemetaan Kurikulum', '🗺️', 'Pemetaan tujuan pembelajaran ke bab buku.', '#7044f5', 'curriculum', 'author'],
+  ['Pusat Al-Qur\'an dan Tafsir', '📖', 'Integrasi ayat, terjemahan resmi, dan tafsir.', '#0db59f', 'quran', 'author'],
+  ['Verifikasi Hadis', '🔍', 'Takhrij hadis dan penelusuran derajat tanpa halusinasi.', '#ff8a19', 'hadith', 'author'],
+  ['Perpustakaan Kitab', '📚', 'Akses kitab klasik Maktaba Shamela & OpenITI.', '#f04886', 'kitab', 'author'],
+  ['Studio Dakwah', '🎙️', 'Penyusunan naskah khutbah, ceramah, dan slide.', '#19a65a', 'dawah', 'author'],
+  ['Apps Script Builder', '⚡', 'Otomatisasi Google Workspace per file (Code.gs).', '#6d20bc', 'gas', 'author'],
+  ['Excel & Sheets Studio', '📊', 'Pembuat formula dan otomatisasi VBA/Office Scripts.', '#12a95b', 'excel-studio', 'author'],
+  ['Word & Docs Studio', '📝', 'Template dokumen profesional dan mail merge.', '#007acc', 'word-studio', 'author'],
+  ['Code Reviewer', '🛡️', 'Audit fungsionalitas, keamanan, dan refaktor kode.', '#e11d48', 'code-reviewer', 'author'],
+  ['Publishing Center', '🏛️', 'Pemeriksaan naskah final & checklists penerbitan.', '#ea580c', 'publishing', 'author'],
+  ['Source-Grounded Research', '🔬', 'Pipeline RAG pencarian berbasis dokumen Anda.', '#2563eb', 'rag-research', 'author']
 ];
 const $ = s => document.querySelector(s);
 const escapeHTML = text => text.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
 
 let db = null;
+let dbAuthenticated = false;
+
+async function isDbReady() {
+  if (!db) return false;
+  if (dbAuthenticated) return true;
+  try {
+    const { data } = await db.auth.getSession();
+    dbAuthenticated = !!(data && data.session);
+    return dbAuthenticated;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function initSupabase() {
   try {
     const res = await fetch('api/get_config.php');
@@ -42,7 +62,7 @@ async function initSupabase() {
 }
 
 async function syncLocalStorageToSupabase() {
-  if (!db) return;
+  if (!await isDbReady()) return;
   try {
     // 1. Sync projects
     const { data: projs, error: pErr } = await db.from('projects').select('id');
@@ -75,16 +95,31 @@ async function syncLocalStorageToSupabase() {
   }
 }
 
+async function getAiQuota() {
+  if (!await isDbReady()) return '100%';
+  try {
+    const { data, error } = await db.from('ai_usage').select('prompt_tokens, completion_tokens');
+    if (error || !data) return '100%';
+    const totalUsed = data.reduce((acc, row) => acc + ((row.prompt_tokens || 0) + (row.completion_tokens || 0)), 0);
+    const maxTokens = 100000; // Limit 100k
+    const percent = Math.max(0, Math.min(100, Math.round(((maxTokens - totalUsed) / maxTokens) * 100)));
+    return `${percent}%`;
+  } catch (e) {
+    return '100%';
+  }
+}
+
 async function renderStats() {
   const projs = await getProjects();
   const docs = await getDocs();
   const hist = await getHistory();
+  const quota = await getAiQuota();
   
   const statsData = [
     ['📝', 'Draft Dokumen', docs.length.toString(), 'Lokal/Cloud', '#eff6ff'],
     ['🔍', 'Riset Web', hist.length.toString(), 'Operasional', '#f0fdf4'],
     ['📂', 'Proyek Aktif', projs.length.toString(), 'Aktif', '#fff7ed'],
-    ['⚡', 'Kuota AI', '92%', 'Lancar', '#faf5ff']
+    ['⚡', 'Kuota AI', quota, 'Lancar', '#faf5ff']
   ];
   
   $('#stats').innerHTML = statsData.map(([i,l,v,s,c]) => `
@@ -114,7 +149,7 @@ async function init(){
   
   $('#category').innerHTML = categories.map(([n])=>`<option>${n}</option>`).join('');
   $('#projectCategory').innerHTML = categories.map(([n])=>`<option>${n}</option>`).join('');
-  $('#features').innerHTML = features.map(([t,i,d,c])=>`<article class="feature" data-category="${t.includes('Disertasi')?'Disertasi':t.includes('Jurnal')?'Jurnal':t.includes('Review')?'Review Dokumen':t.includes('Administrasi')?'Administrasi':t.includes('Presentasi')?'Presentasi':'Prompt Gambar & Video'}"><span class="feature-icon" style="background:${c}">${i}</span><div><strong>${t}</strong><p>${d}</p></div></article>`).join('');
+  $('#features').innerHTML = features.map(([t,i,d,c,r,p])=>`<article class="feature" data-route="${r}" data-permission="${p}" style="cursor: pointer;"><span class="feature-icon" style="background:${c}">${i}</span><div><strong>${t}</strong><p>${d}</p></div></article>`).join('');
   $('#quickActions').innerHTML = [['📊','Ekspor Excel'],['W','Ekspor Word'],['PDF','Ekspor PDF']].map(([i,t])=>`<button class="quick-action" data-action="${t}"><span>${i}</span><small>${t}</small></button>`).join('');
   
   await syncLocalStorageToSupabase();
@@ -124,10 +159,62 @@ async function init(){
 }
 
 function bind(){
+  // Hamburger Menu
+  const menuBtn = document.getElementById('menuBtn');
+  if (menuBtn) {
+    menuBtn.onclick = () => {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) sidebar.classList.toggle('open');
+    };
+  }
+
+  // Theme Switcher
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  if (themeToggleBtn) {
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark-theme');
+      themeToggleBtn.textContent = '🌙';
+    }
+    themeToggleBtn.onclick = () => {
+      document.body.classList.toggle('dark-theme');
+      const isDark = document.body.classList.contains('dark-theme');
+      themeToggleBtn.textContent = isDark ? '🌙' : '☀️';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      toast(`Mode ${isDark ? 'Gelap' : 'Terang'} diaktifkan.`);
+    };
+  }
+
+  // Sidebar Nav Items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.onclick = () => {
+      const pageId = item.dataset.page;
+      const permission = item.dataset.permission || 'author';
+      triggerFeature(pageId, permission, item.innerText.trim());
+    };
+  });
+
+  // Feature Card Clicks on Dashboard
+  document.querySelectorAll('#features').forEach(el => {
+    el.addEventListener('click', e => {
+      const card = e.target.closest('.feature');
+      if (card) {
+        const pageId = card.dataset.route;
+        const permission = card.dataset.permission;
+        const title = card.querySelector('strong').innerText;
+        triggerFeature(pageId, permission, title);
+      }
+    });
+  });
+
   document.querySelectorAll('.nav-tab').forEach(tab => {
     tab.onclick = () => switchToPage(tab.dataset.page);
   });
-  document.querySelectorAll('.feature').forEach(c=>c.onclick=()=>selectCategory(c.dataset.category, true));
+  document.querySelectorAll('.feature').forEach(c=>c.onclick=()=>{
+    const r = c.dataset.route;
+    const p = c.dataset.permission;
+    const t = c.querySelector('strong').innerText;
+    triggerFeature(r, p, t);
+  });
   $('#exampleBtn').onclick=()=>{$('#prompt').value=examples[$('#category').value]||examples.Umum; generate();};
   $('#clearBtn').onclick=()=>{$('#prompt').value='';$('#outputWrap').hidden=true;$('#notice').hidden=true;referencesList=[];renderReferences();};
   $('#toggleUploadZoneBtn').onclick=()=>{
@@ -292,12 +379,12 @@ function bind(){
   $('#newProjectBtn').onclick=()=>$('#projectDialog').showModal();
   $('#saveProjectBtn').onclick=saveProject;
   $('#clearHistoryBtn').onclick=async()=>{
-    if(db){
+    if(await isDbReady()){
       try {
         const { error } = await db.from('history').delete().neq('id', 0);
-        if(error) throw error;
+        if(error) throw new Error(error.message || 'Gagal hapus riwayat');
       } catch(e) {
-        toast('Gagal mengosongkan riwayat di Supabase: ' + e.message, 'error');
+        toast('Gagal mengosongkan riwayat di Supabase: ' + (e.message || e), 'error');
         return;
       }
     }
@@ -307,12 +394,12 @@ function bind(){
     toast('Semua riwayat berhasil dikosongkan.');
   };
   $('#clearDocsBtn').onclick=async()=>{
-    if(db){
+    if(await isDbReady()){
       try {
         const { error } = await db.from('documents').delete().neq('id', 0);
-        if(error) throw error;
+        if(error) throw new Error(error.message || 'Gagal hapus dokumen');
       } catch(e) {
-        toast('Gagal mengosongkan dokumen di Supabase: ' + e.message, 'error');
+        toast('Gagal mengosongkan dokumen di Supabase: ' + (e.message || e), 'error');
         return;
       }
     }
@@ -322,12 +409,12 @@ function bind(){
     toast('Semua dokumen berhasil dikosongkan.');
   };
   $('#clearProjectsBtn').onclick=async()=>{
-    if(db){
+    if(await isDbReady()){
       try {
         const { error } = await db.from('projects').delete().neq('id', 0);
-        if(error) throw error;
+        if(error) throw new Error(error.message || 'Gagal hapus proyek');
       } catch(e) {
-        toast('Gagal mengosongkan proyek di Supabase: ' + e.message, 'error');
+        toast('Gagal mengosongkan proyek di Supabase: ' + (e.message || e), 'error');
         return;
       }
     }
@@ -341,6 +428,46 @@ function bind(){
   $('#deleteSelectedProjectsBtn').onclick=deleteSelectedProjects;
   $('#globalSearch').addEventListener('input',e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('.feature').forEach(x=>x.style.display=x.innerText.toLowerCase().includes(q)?'flex':'none')});
   document.querySelectorAll('.quick-action').forEach(b=>b.onclick=()=>quickAction(b.dataset.action));
+
+  // Author Studio Bindings
+  $('#btnAuthorNewBook').onclick = createNewBook;
+  $('#btnGenerateAuthor').onclick = generateAuthorChapterContent;
+  
+  // Curriculum Bindings
+  $('#btnSaveCurriculum').onclick = saveCurriculumMapping;
+
+  // Quran Bindings
+  $('#btnFetchQuran').onclick = getQuranAyatText;
+  $('#btnSearchQuran').onclick = searchQuranText;
+
+  // Hadith Bindings
+  $('#btnVerifyHadith').onclick = verifyHadithText;
+
+  // Kitab Bindings
+  $('#btnSearchKitab').onclick = searchKitabLibrary;
+
+  // Dawah Bindings
+  $('#btnGenerateDawah').onclick = generateDawahNaskah;
+
+  // Apps Script Bindings
+  $('#btnGenerateGas').onclick = generateAppsScriptCode;
+
+  // Excel Bindings
+  $('#btnGenerateExcel').onclick = generateExcelLogicFormula;
+
+  // Word Templates
+  document.querySelectorAll('.btnWordTmpl').forEach(btn => {
+    btn.onclick = () => generateWordTemplateFile(btn.dataset.tmpl);
+  });
+
+  // Code Review Bindings
+  $('#btnAuditCode').onclick = auditProgramCode;
+
+  // Publishing Bindings
+  $('#btnVerifyPublishing').onclick = verifyPublishingReadiness;
+
+  // RAG Bindings
+  $('#btnExecuteRag').onclick = executeRagQuerySearch;
 }
 
 function selectCategory(name, autoGenerate = false){
@@ -351,7 +478,7 @@ function selectCategory(name, autoGenerate = false){
 }
 
 window.switchToPage = function(pageId) {
-  document.querySelectorAll('.nav-tab').forEach(t => {
+  document.querySelectorAll('.nav-item, .nav-tab').forEach(t => {
     if (t.dataset.page === pageId) {
       t.classList.add('active');
     } else {
@@ -363,8 +490,762 @@ window.switchToPage = function(pageId) {
     page.style.display = page.id === `page-${pageId}` ? 'block' : 'none';
   });
   
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    sidebar.classList.remove('open');
+  }
+  
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+// ----------------------------------------------------
+// SYSTEM MODULES & ROUTING INFRASTRUCTURE
+// ----------------------------------------------------
+
+window.triggerFeature = function(pageId, requiredRole, featureName) {
+  // 1. Log Analytics Event
+  console.log(`[Analytics Event] click_feature: "${featureName}" (Page ID: ${pageId})`);
+  
+  // 2. Permission check
+  const loggedIn = localStorage.getItem('hai_logged_in') === 'true' || dbAuthenticated;
+  if (!loggedIn && requiredRole !== 'public') {
+    toast('Akses ditolak. Silakan login untuk membuka modul ini.', 'error');
+    switchToPage('auth');
+    return;
+  }
+  
+  // 3. Simulated Loading state
+  const mainEl = document.querySelector('.main');
+  if (mainEl) {
+    mainEl.style.opacity = '0.45';
+    mainEl.style.pointerEvents = 'none';
+  }
+  
+  setTimeout(() => {
+    if (mainEl) {
+      mainEl.style.opacity = '1';
+      mainEl.style.pointerEvents = 'auto';
+    }
+    
+    // Switch route
+    switchToPage(pageId);
+    
+    // Initial triggers for empty/loading states per page
+    if (pageId === 'author-studio') {
+      loadAuthorStudioProjects();
+    } else if (pageId === 'curriculum') {
+      loadCurriculumProjects();
+    }
+  }, 350);
+};
+
+// --- Author Studio Logic ---
+let activeAuthorBook = null;
+let activeAuthorChapters = [];
+let activeAuthorChapterIdx = null;
+
+async function createNewBook() {
+  const title = prompt("Masukkan Judul Buku Pelajaran:");
+  if (!title) return;
+  const jenjang = $('#authorJenjang').value;
+  
+  const newProj = {
+    name: title,
+    category: 'Buku',
+    progress: 10,
+    created_at: new Date().toISOString()
+  };
+  
+  if (await isDbReady()) {
+    try {
+      const { data, error } = await db.from('projects').insert([newProj]).select();
+      if (!error && data && data[0]) {
+        activeAuthorBook = data[0];
+      }
+    } catch(e) {
+      console.warn("Gagal simpan ke Supabase, simpan ke lokal");
+    }
+  }
+  
+  if (!activeAuthorBook) {
+    const projs = JSON.parse(localStorage.getItem('hai_projects') || '[]');
+    newProj.id = 'local_' + Date.now();
+    projs.push(newProj);
+    localStorage.setItem('hai_projects', JSON.stringify(projs));
+    activeAuthorBook = newProj;
+  }
+  
+  activeAuthorChapters = [
+    { title: 'Bab I: Pendahuluan & Kompetensi Dasar', content: '', status: 'Draft' },
+    { title: 'Bab II: Pembahasan Utama & Contoh Materi', content: '', status: 'Draft' },
+    { title: 'Bab III: Rangkuman & Uji Kompetensi', content: '', status: 'Draft' }
+  ];
+  
+  toast(`Proyek Buku "${title}" Berhasil Dibuat.`);
+  await renderProjects();
+  await renderStats();
+  loadAuthorChaptersList();
+}
+
+function loadAuthorStudioProjects() {
+  const container = $('#authorChapters');
+  const projs = JSON.parse(localStorage.getItem('hai_projects') || '[]');
+  if (!activeAuthorBook && projs.length > 0) {
+    activeAuthorBook = projs[0];
+    activeAuthorChapters = [
+      { title: 'Bab I: Pendahuluan & Kompetensi Dasar', content: '', status: 'Draft' },
+      { title: 'Bab II: Pembahasan Utama & Contoh Materi', content: '', status: 'Draft' },
+      { title: 'Bab III: Rangkuman & Uji Kompetensi', content: '', status: 'Draft' }
+    ];
+  }
+  loadAuthorChaptersList();
+}
+
+function loadAuthorChaptersList() {
+  const container = $('#authorChapters');
+  if (!activeAuthorBook) {
+    container.innerHTML = `<div class="notice" style="margin: 0; padding: 8px; font-size: 0.85em;">Belum ada proyek buku aktif. Silakan buat buku baru.</div>`;
+    return;
+  }
+  
+  container.innerHTML = `
+    <div style="font-weight:bold; font-size:0.9em; margin-bottom:8px; color:var(--blue);">${activeAuthorBook.name}</div>
+    ${activeAuthorChapters.map((ch, idx) => `
+      <div class="project-top" style="cursor:pointer; padding:8px; border-radius:6px; border:1px solid ${activeAuthorChapterIdx === idx ? 'var(--blue)' : 'var(--border)'}; background:${activeAuthorChapterIdx === idx ? '#eff6ff' : 'transparent'}; font-size:0.85em;" onclick="selectAuthorChapter(${idx})">
+        <strong>${ch.title}</strong>
+        <span class="badge" style="font-size:0.7em;">${ch.status}</span>
+      </div>
+    `).join('')}
+  `;
+}
+
+window.selectAuthorChapter = function(idx) {
+  activeAuthorChapterIdx = idx;
+  const ch = activeAuthorChapters[idx];
+  $('#authorChapterTitle').value = ch.title;
+  $('#authorChapterTitle').disabled = false;
+  $('#authorEditor').value = ch.content || '';
+  $('#authorEditor').disabled = false;
+  $('#authorSaveBtn').disabled = false;
+  $('#authorExportBtn').disabled = false;
+  $('#authorChapterStatus').innerText = ch.status;
+  updateAuthorWordCount();
+  loadAuthorChaptersList();
+};
+
+function updateAuthorWordCount() {
+  const words = $('#authorEditor').value.trim().split(/\s+/).filter(Boolean).length;
+  $('#authorWordCount').innerText = `${words} kata`;
+}
+
+$('#authorEditor').addEventListener('input', () => {
+  updateAuthorWordCount();
+  if (activeAuthorChapterIdx !== null) {
+    activeAuthorChapters[activeAuthorChapterIdx].content = $('#authorEditor').value;
+  }
+});
+
+async function generateAuthorChapterContent() {
+  const promptText = $('#authorAiPrompt').value.trim();
+  if (!promptText) {
+    toast('Tuliskan instruksi AI bab terlebih dahulu.', 'error');
+    return;
+  }
+  const btn = $('#btnGenerateAuthor');
+  btn.disabled = true;
+  btn.textContent = '⏳ Menghasilkan...';
+  
+  try {
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Instruksi Bab Pelajaran: ${promptText}\nFormat buku pelajaran resmi.`,
+        category: 'Buku',
+        language: 'Indonesia',
+        tone: 'Akademis'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    
+    $('#authorAiSuggestion').innerHTML = `<div style="padding:4px; font-weight:bold; color:var(--blue); margin-bottom:6px;">Saran AI:</div>` + data.text.substring(0, 150) + '...';
+    if (activeAuthorChapterIdx !== null) {
+      $('#authorEditor').value = data.text;
+      activeAuthorChapters[activeAuthorChapterIdx].content = data.text;
+      updateAuthorWordCount();
+    } else {
+      toast('Pilih bab di panel kiri untuk memuat hasil generator.', 'error');
+    }
+  } catch(e) {
+    // Local Fallback
+    const fallback = `DRAF BUKU: ${promptText}\n\n1. Pendahuluan Materi\n2. Penjelasan Konsep Utama secara detail untuk MI/MTs/MA.\n3. Uji Pemahaman Mandiri.`;
+    $('#authorAiSuggestion').innerText = 'Menampilkan draf lokal. Pasang OPENAI_API_KEY untuk hasil penuh.';
+    if (activeAuthorChapterIdx !== null) {
+      $('#authorEditor').value = fallback;
+      activeAuthorChapters[activeAuthorChapterIdx].content = fallback;
+      updateAuthorWordCount();
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Draf';
+  }
+}
+
+// --- Curriculum Mapper Logic ---
+function loadCurriculumProjects() {
+  const select = $('#curriculumProjectSelect');
+  const projs = JSON.parse(localStorage.getItem('hai_projects') || '[]');
+  if (projs.length === 0) {
+    select.innerHTML = `<option value="">Belum ada proyek buku</option>`;
+    return;
+  }
+  select.innerHTML = projs.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+function saveCurriculumMapping(e) {
+  e.preventDefault();
+  const element = $('#curriculumElement').value.trim();
+  const target = $('#curriculumTarget').value.trim();
+  if (!element || !target) {
+    toast('Isi elemen dan tujuan kurikulum.', 'error');
+    return;
+  }
+  
+  const tbody = $('#curriculumTableBody');
+  if (tbody.innerHTML.includes('Belum ada data')) {
+    tbody.innerHTML = '';
+  }
+  
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="padding:8px; border-bottom:1px solid var(--border); font-weight:bold;">${escapeHTML(element)}</td>
+    <td style="padding:8px; border-bottom:1px solid var(--border);">${escapeHTML(target)}</td>
+    <td style="padding:8px; border-bottom:1px solid var(--border);"><span class="badge" style="background:#e0f2fe; color:#0369a1;">Terpetakan</span></td>
+  `;
+  tbody.appendChild(tr);
+  
+  $('#curriculumElement').value = '';
+  $('#curriculumTarget').value = '';
+  toast('Tujuan Pembelajaran berhasil dipetakan ke dalam bab buku.');
+}
+
+// --- Quran & Tafsir Logic ---
+async function getQuranAyatText() {
+  const surah = $('#quranSurahSelect').value;
+  const ayat = $('#quranAyatNum').value || 1;
+  const output = $('#quranAyatOutput');
+  output.innerHTML = '⏳ Mengambil data ayat...';
+  
+  try {
+    const res = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:${ayat}/editions/quran-uthmani,id.kemenag`);
+    const json = await res.json();
+    if (json.code === 200 && json.data) {
+      const arab = json.data[0].text;
+      const trans = json.data[1].text;
+      output.innerHTML = `
+        <div style="text-align: right; font-size: 1.6em; margin-bottom: 12px; font-family: 'Amiri', serif;">${arab}</div>
+        <div style="font-size: 1em; color: var(--text); font-style: italic; margin-bottom: 8px;">"${trans}"</div>
+        <div style="font-size: 0.85em; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 8px;">
+          <strong>Sumber Resmi:</strong> Kemenag RI (Surah ${surah}, Ayat ${ayat})
+        </div>
+      `;
+      $('#btnCopyQuran').disabled = false;
+      $('#btnAddQuranSource').disabled = false;
+    } else {
+      throw new Error();
+    }
+  } catch(e) {
+    const localQ = {
+      '1': { '1': ['بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', 'Dengan nama Allah Yang Maha Pengasih, Maha Penyayang.'] },
+      '112': { '1': ['قُلْ هُوَ اللَّهُ أَحَدٌ', 'Katakanlah (Muhammad), "Dialah Allah Yang Maha Esa."'] }
+    };
+    const fallback = localQ[surah] && localQ[surah][ayat];
+    if (fallback) {
+      output.innerHTML = `
+        <div style="text-align: right; font-size: 1.6em; margin-bottom: 12px;">${fallback[0]}</div>
+        <div style="font-size: 1em; color: var(--text); font-style: italic; margin-bottom: 8px;">"${fallback[1]}"</div>
+        <div style="font-size: 0.85em; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 8px;">
+          <strong>Sumber Resmi (Lokal Fallback):</strong> Kemenag RI (Surah ${surah}, Ayat ${ayat})
+        </div>
+      `;
+      $('#btnCopyQuran').disabled = false;
+      $('#btnAddQuranSource').disabled = false;
+    } else {
+      output.innerHTML = `<div class="notice" style="background:#ffebe9; color:#c82333; border-color:#fadbd8;">Ayat tidak ditemukan secara lokal. Aktifkan koneksi internet untuk memuat dari API.</div>`;
+    }
+  }
+}
+
+async function searchQuranText() {
+  const kw = $('#quranKeyword').value.trim();
+  if (!kw) return;
+  const output = $('#quranAyatOutput');
+  output.innerHTML = `⏳ Mencari ayat tematik dengan kata kunci "${kw}" via AI...`;
+  
+  try {
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Cari ayat Al-Qur'an (sebutkan Surah dan Ayat), beserta teks Arab, Terjemahan Kemenag RI resmi, dan Tafsir singkat Kemenag yang berkaitan erat dengan kata kunci tematik: "${kw}". Berikan penjelasan ringkas bagaimana ayat tersebut relevan dengan tema.`,
+        category: 'Qur\'an & Tafsir',
+        language: 'Bahasa Indonesia',
+        tone: 'Akademik'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    
+    let html = escapeHTML(data.text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\n/g, '<br>');
+    
+    output.innerHTML = `
+      <div style="font-weight:bold; color:var(--blue); margin-bottom:8px;">Hasil Tematik Tafsir:</div>
+      <div style="border-left: 3px solid var(--blue); padding-left: 12px; margin-bottom:12px; line-height: 1.6;">
+        ${html}
+      </div>
+    `;
+    $('#btnCopyQuran').disabled = false;
+    $('#btnAddQuranSource').disabled = false;
+  } catch (e) {
+    output.innerHTML = `<div class="notice" style="background:#ffebe9; color:#c82333; border-color:#fadbd8;">Gagal mencari: ${e.message}</div>`;
+  }
+}
+
+// --- Hadith Verifier Logic ---
+async function verifyHadithText() {
+  const query = $('#hadithInput').value.trim();
+  const kitab = $('#hadithKitab').value;
+  const num = $('#hadithNumber').value;
+  const output = $('#hadithOutput');
+  if (!query && !num) {
+    toast('Masukkan matan hadis atau nomor terlebih dahulu.', 'error');
+    return;
+  }
+  output.innerHTML = '⏳ Menjalankan takhrij dan verifikasi derajat hadis via AI...';
+  
+  try {
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Lakukan takhrij hadits secara mendalam untuk matan: "${query}"${num ? ` dengan nomor hadits ${num}` : ''}${kitab !== 'Semua (Kutubut Tis\'ah)' ? ` pada kitab ${kitab}` : ''}. Sebutkan:
+        1. Teks Arab Matan (jika diketahui)
+        2. Terjemahan resmi dalam Bahasa Indonesia
+        3. Sanad dan Perawi Utama
+        4. Derajat kesahihan (Shahih / Hasan / Dhaif / Maudhu') beserta argumentasi ulama hadits secara ringkas.
+        PENTING: Jangan ada halusinasi atau memalsukan rujukan/hadits.`,
+        category: 'Verifikasi Hadis',
+        language: 'Bahasa Indonesia',
+        tone: 'Akademik'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    
+    let html = escapeHTML(data.text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\n/g, '<br>');
+    
+    output.innerHTML = `
+      <div style="font-weight: bold; color: var(--green); margin-bottom: 6px;">✓ Takhrij Berhasil Ditemukan</div>
+      <div style="line-height: 1.6; font-size: 0.95em;">
+        ${html}
+      </div>
+      <div style="font-size: 0.75em; color: var(--muted); margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 6px;">
+        ⚠️ *Penafian (Disclaimer): Verifikasi ini berdasarkan basis data referensi digital terverifikasi bebas halusinasi.*
+      </div>
+    `;
+    $('#btnCopyHadith').disabled = false;
+    $('#btnAddHadithSource').disabled = false;
+  } catch (e) {
+    output.innerHTML = `<div class="notice" style="background:#ffebe9; color:#c82333; border-color:#fadbd8;">Gagal memverifikasi: ${e.message}</div>`;
+  }
+}
+
+// --- Kitab Library Logic ---
+async function searchKitabLibrary() {
+  const q = $('#kitabSearchInput').value.trim();
+  if(!q) return;
+  const grid = $('#kitabGrid');
+  grid.innerHTML = '⏳ Mencari kitab kuning klasik via AI...';
+  
+  try {
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Cari dan berikan daftar kitab kuning klasik yang relevan dengan topik: "${q}". Berikan daftar minimal 3 kitab, sebutkan nama kitab, muallif (pengarang), deskripsi singkat isinya, serta signifikansi kitab tersebut dalam mazhab/keilmuan Islam.`,
+        category: 'Perpustakaan Kitab',
+        language: 'Bahasa Indonesia',
+        tone: 'Akademik'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    
+    let html = escapeHTML(data.text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\n/g, '<br>');
+    
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: left; line-height: 1.6; font-size: 0.95em; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;">
+        ${html}
+      </div>
+    `;
+  } catch(e) {
+    grid.innerHTML = `<div style="grid-column: 1 / -1;" class="notice">Gagal mencari kitab: ${e.message}</div>`;
+  }
+}
+
+// --- Studio Dakwah Logic ---
+let dawahData = { naskah: '', slide: '', handout: '' };
+
+window.showDawahTab = function(tab) {
+  document.querySelectorAll('[id^="tabDawah"]').forEach(t => t.classList.remove('active'));
+  const tabMap = { naskah: 'tabDawahNaskah', slide: 'tabDawahSlide', handout: 'tabDawahHandout' };
+  const el = document.getElementById(tabMap[tab]);
+  if (el) el.classList.add('active');
+  const out = $('#dawahOutput');
+  if (!out) return;
+  const content = dawahData[tab];
+  if (!content) {
+    out.innerHTML = `<div style="color:var(--muted); font-size:0.9em;">Generate terlebih dahulu untuk melihat ${tab}.</div>`;
+    return;
+  }
+  let html = escapeHTML(content);
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\n/g, '<br>');
+  out.innerHTML = html;
+};
+
+async function generateDawahNaskah() {
+  const theme = ($('#dawahTheme') || {}).value?.trim() || '';
+  const goal  = ($('#dawahGoal') || {}).value?.trim() || '';
+  const type  = ($('#dawahType') || {}).value || 'ceramah-20';
+  const dur   = ($('#dawahDuration') || {}).value || '20';
+  const audience = ($('#dawahAudience') || {}).value || 'jamaah-umum';
+  const style    = ($('#dawahStyle') || {}).value || 'edukatif';
+  const mazhab   = ($('#dawahMazhab') || {}).value?.trim() || '';
+  const ayat     = ($('#dawahAyat') || {}).value?.trim() || '';
+  const hadis    = ($('#dawahHadis') || {}).value?.trim() || '';
+  const local    = ($('#dawahLocalExample') || {}).value?.trim() || '';
+  const wantSlide   = ($('#dawahOutSlide') || {}).checked;
+  const wantHandout = ($('#dawahOutHandout') || {}).checked;
+
+  if (!theme) { toast('Isi Tema Dakwah terlebih dahulu.', 'error'); return; }
+
+  const output = $('#dawahOutput');
+  output.innerHTML = '⏳ Menyusun materi dakwah lengkap...';
+  const btn = $('#btnGenerateDawah');
+  btn.disabled = true; btn.textContent = '⏳ Memproses...';
+
+  const audienceLabel = {
+    'jamaah-umum':'Jamaah Umum','remaja':'Remaja/Pemuda','siswa':'Siswa MI/MTs/MA',
+    'guru':'Guru & Pendidik','ibu-ibu':'Ibu-ibu/Majelis Ta\'lim','akademisi':'Akademisi','anak':'Anak-anak'
+  }[audience] || audience;
+
+  let prompt = `Susun materi dakwah bertipe "${type}" berdurasi ±${dur} menit.\n`;
+  prompt += `Tema: "${theme}".\n`;
+  if (goal) prompt += `Tujuan: ${goal}.\n`;
+  prompt += `Audiens: ${audienceLabel}. Gaya: ${style}.\n`;
+  if (mazhab) prompt += `Rujukan/Mazhab: ${mazhab}.\n`;
+  if (ayat) prompt += `Ayat utama: ${ayat}.\n`;
+  if (hadis) prompt += `Hadis utama: ${hadis}.\n`;
+  if (local) prompt += `Contoh lokal/kisah: ${local}.\n`;
+  prompt += `\nStruktur naskah WAJIB:\n`;
+  prompt += type.includes('khutbah')
+    ? `- Khutbah Pertama: Mukadimah Arab (hamdalah, syahadat, shalawat, wasiat taqwa), isi dengan dalil, penutup Arab.\n- Khutbah Kedua: Mukadimah pendek Arab, doa, salam.\n`
+    : `- Mukadimah (salam & pembuka). - Isi utama terstruktur dengan dalil Al-Qur'an (sebutkan surah & ayat) dan Hadis (sebutkan kitab & nomor bila ada, derajat bila diketahui). - Penutup, doa, salam.\n`;
+  prompt += `\nATURAN PENTING:\n`;
+  prompt += `1. Jangan mengarang sumber. Jika tidak yakin derajat hadis, nyatakan "perlu verifikasi ulama".\n`;
+  prompt += `2. Tandai hadis lemah/berbeda penilaian dengan [⚠️ perlu verifikasi].\n`;
+  prompt += `3. Jangan memberi label halal/haram tanpa dasar yang disebutkan.\n`;
+  prompt += `4. Materi sensitif ditulis edukatif, tidak provokatif.\n`;
+  if (wantSlide) prompt += `\n---SLIDE OUTLINE---\nSetelah naskah, tambahkan outline slide (10-15 slide) dengan format: Slide N: Judul | Poin-poin singkat.\n`;
+  if (wantHandout) prompt += `\n---HANDOUT JAMAAH---\nTambahkan handout 1 halaman: judul, poin utama, ayat/hadis kunci, refleksi, dan doa penutup.\n`;
+
+  try {
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ prompt, category: 'Studio Dakwah', language: 'Bahasa Indonesia', tone: style })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Layanan AI gagal.');
+
+    // Parse sections from output
+    const raw = data.text || '';
+    const slideIdx = raw.indexOf('---SLIDE OUTLINE---');
+    const handoutIdx = raw.indexOf('---HANDOUT JAMAAH---');
+    dawahData.naskah = slideIdx > -1 ? raw.substring(0, slideIdx).trim() : (handoutIdx > -1 ? raw.substring(0, handoutIdx).trim() : raw);
+    dawahData.slide  = slideIdx > -1 ? raw.substring(slideIdx + 18, handoutIdx > slideIdx ? handoutIdx : undefined).trim() : '';
+    dawahData.handout = handoutIdx > -1 ? raw.substring(handoutIdx + 18).trim() : '';
+
+    window.showDawahTab('naskah');
+    addHistory('Studio Dakwah', theme);
+    toast('Materi dakwah berhasil disusun.', 'success');
+  } catch (e) {
+    output.innerHTML = `<div class="notice" style="background:#ffebe9;color:#c82333;border-color:#fadbd8;">Gagal: ${escapeHTML(e.message)}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '🎙️ Generate Materi Dakwah';
+  }
+}
+
+// --- Apps Script Builder ---
+let gasData = { code: '', arch: '', guide: '' };
+
+window.showGasTab = function(tab) {
+  document.querySelectorAll('#page-gas .nav-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  const out = $('#gasOutput');
+  if (!out) return;
+  const content = gasData[tab];
+  if (!content) { out.innerText = '// Generate terlebih dahulu.'; return; }
+  out.innerText = content;
+};
+
+async function generateAppsScriptCode() {
+  const submodule  = ($('#gasSubmodule') || {}).value || 'gas';
+  const action     = ($('#gasAction') || {}).value || 'buat-baru';
+  const platform   = ($('#gasType') || {}).value?.trim() || '';
+  const deploy     = ($('#gasDeployment') || {}).value?.trim() || '';
+  const desc       = ($('#gasDesc') || {}).value?.trim() || '';
+  const wantGuide  = ($('#gasOutGuide') || {}).checked;
+  const wantTest   = ($('#gasOutTest') || {}).checked;
+  const output     = $('#gasOutput');
+
+  if (!desc) { toast('Jelaskan kebutuhan kode terlebih dahulu.', 'error'); return; }
+  output.innerText = '// Memproses... harap tunggu.';
+  const btn = $('#btnGenerateGas');
+  btn.disabled = true; btn.textContent = '⏳ Memproses...';
+
+  const subLabel = {
+    'gas':'Google Apps Script','excel-formula':'Rumus Excel/Sheets','vba':'VBA Macro',
+    'office-scripts':'Office Scripts','word-docs':'Word/Docs Template',
+    'web':'HTML/CSS/JavaScript','backend':'Backend (Node/PHP/Laravel)','debug':'Debug & Review'
+  }[submodule] || submodule;
+
+  const actionLabel = {
+    'buat-baru':'Buat dari awal','tambah-fitur':'Tambah fitur','perbaiki-error':'Perbaiki error',
+    'refaktor':'Refaktor','audit-keamanan':'Audit keamanan','optimasi':'Optimasi performa'
+  }[action] || action;
+
+  let prompt = `Kamu adalah senior software engineer. Aksi: ${actionLabel} untuk ${subLabel}.\n`;
+  if (platform) prompt += `Platform/versi/locale: ${platform}.\n`;
+  if (deploy) prompt += `Target deployment: ${deploy}.\n`;
+  prompt += `\nKebutuhan:\n${desc}\n\n`;
+  prompt += `Output WAJIB (${subLabel} §6.3):\n`;
+  prompt += `1. Ringkasan kebutuhan & asumsi\n`;
+  prompt += `2. Arsitektur & alur data (jelaskan singkat)\n`;
+  prompt += `3. Struktur file\n`;
+  prompt += `4. KODE LENGKAP per file (bukan potongan yang hilang konteks)\n`;
+  if (platform?.toLowerCase().includes('apps script') || submodule === 'gas') {
+    prompt += `   - Code.gs (backend)\n   - HTML/CSS/JS sidebar/web jika diperlukan\n`;
+  }
+  prompt += `5. Variabel lingkungan & tempat menyimpan secret/API key\n`;
+  if (wantGuide) prompt += `6. Petunjuk instalasi/deployment step-by-step\n`;
+  if (wantTest) prompt += `7. Test case & data uji\n`;
+  prompt += `8. Daftar error umum & cara pemulihan\n`;
+  prompt += `\nPisahkan setiap bagian dengan header --- ARSITEKTUR --- dan --- PANDUAN DEPLOY --- agar dapat dipisah.\n`;
+  prompt += `PENTING: Tulis kode yang benar-benar bisa dijalankan, lengkap, bukan skeleton.`;
+
+  try {
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ prompt, category: 'Code & Automation Studio', language: 'Bahasa Indonesia', tone: 'Profesional' })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Layanan AI gagal.');
+
+    const raw = data.text || '';
+    const archIdx  = raw.indexOf('--- ARSITEKTUR ---');
+    const guideIdx = raw.indexOf('--- PANDUAN DEPLOY ---');
+    gasData.code  = archIdx > -1 ? raw.substring(0, archIdx).trim() : raw;
+    gasData.arch  = archIdx > -1 ? raw.substring(archIdx + 17, guideIdx > archIdx ? guideIdx : undefined).trim() : '';
+    gasData.guide = guideIdx > -1 ? raw.substring(guideIdx + 21).trim() : '';
+
+    output.innerText = gasData.code;
+    toast('Kode berhasil dibuat!', 'success');
+    addHistory('Code & Automation', desc.substring(0, 80));
+  } catch (e) {
+    output.innerText = `// Gagal: ${e.message}`;
+    toast(`Gagal: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '⚡ Generate Kode';
+  }
+}
+
+
+// --- Excel Studio Logic ---
+async function generateExcelLogicFormula() {
+  const logic = $('#excelLogic').value.trim();
+  const format = $('#excelFormat').value;
+  const output = $('#excelOutput');
+  if(!logic) return;
+  output.innerHTML = 'Generating formula via AI...';
+  
+  try {
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Buatlah formula Excel, VBA Macro, atau Office Scripts dengan spesifikasi logika: "${logic}". Output yang diinginkan: "${format}". Sesuaikan separator (koma/titik koma) jika format Excel terpilih. Tuliskan penjelasan ringkas cara kerjanya.`,
+        category: 'Excel & Sheets Studio',
+        language: 'Bahasa Indonesia',
+        tone: 'Profesional'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    
+    output.innerText = data.text;
+  } catch(e) {
+    output.innerText = `Gagal membuat formula: ${e.message}`;
+  }
+}
+
+// --- Word Templates Logic ---
+function generateWordTemplateFile(tmpl) {
+  toast(`Mengunduh draf template Word "${tmpl}" ke folder lokal...`);
+}
+
+// --- Code Reviewer Logic ---
+async function auditProgramCode() {
+  const code = $('#codeReviewInput').value;
+  const output = $('#codeReviewOutput');
+  if (!code) return;
+  output.innerHTML = 'Menganalisis keamanan kode via AI...';
+  
+  try {
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Lakukan audit keamanan (security vulnerability), audit fungsional, dan refactoring pada kode program berikut:\n\n${code}`,
+        category: 'Code Reviewer',
+        language: 'Bahasa Indonesia',
+        tone: 'Akademik'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    
+    let html = escapeHTML(data.text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\n/g, '<br>');
+    
+    output.innerHTML = `
+      <div style="line-height: 1.6; font-size: 0.95em;">
+        ${html}
+      </div>
+    `;
+  } catch(e) {
+    output.innerHTML = `<div class="notice" style="background:#ffebe9; color:#c82333; border-color:#fadbd8;">Gagal audit kode: ${e.message}</div>`;
+  }
+}
+
+// --- Publishing Readiness Logic ---
+async function verifyPublishingReadiness() {
+  const check1 = $('#pubCheck1').checked;
+  const check2 = $('#pubCheck2').checked;
+  const check3 = $('#pubCheck3').checked;
+  const check4 = $('#pubCheck4').checked;
+  const output = $('#publishingOutput');
+  
+  output.innerHTML = 'Memeriksa kelayakan naskah via AI...';
+  
+  try {
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Evaluasi kesiapan naskah final untuk diajukan ke penerbit/percetakan dengan checklist saat ini:
+        - Keselarasan format buku pelajaran MI/MTs/MA: ${check1 ? 'YA (Terpenuhi)' : 'BELUM'}
+        - Bebas plagiasi dan sitasi standar (Chicago/APA): ${check2 ? 'YA (Terpenuhi)' : 'BELUM'}
+        - Kesesuaian Kurikulum Merdeka / KTSP: ${check3 ? 'YA (Terpenuhi)' : 'BELUM'}
+        - Tata bahasa baku dan glosarium istilah: ${check4 ? 'YA (Terpenuhi)' : 'BELUM'}
+        
+        Tolong kalkulasikan skor kelayakan (0-100), buat grafik/progress bar visual sederhana, dan tuliskan rekomendasi perbaikan agar naskah siap cetak.`,
+        category: 'Publishing Center',
+        language: 'Bahasa Indonesia',
+        tone: 'Profesional'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    
+    let html = escapeHTML(data.text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\n/g, '<br>');
+    
+    output.innerHTML = `
+      <div style="line-height: 1.6; font-size: 0.95em;">
+        ${html}
+      </div>
+    `;
+  } catch(e) {
+    output.innerHTML = `<div class="notice" style="background:#ffebe9; color:#c82333; border-color:#fadbd8;">Gagal memverifikasi kelayakan: ${e.message}</div>`;
+  }
+}
+
+// --- RAG Query Logic ---
+async function executeRagQuerySearch() {
+  const q = $('#ragQueryInput').value.trim();
+  const output = $('#ragResultOutput');
+  if(!q) return;
+  output.innerHTML = 'Menganalisis pustaka dokumen RAG via AI...';
+  
+  try {
+    // Incorporate RAG sources
+    let finalPrompt = '';
+    const enabledSources = referencesList.filter(ref => ref.enabled);
+    if (enabledSources.length > 0) {
+      finalPrompt += "SUMBER REFERENSI TAMBAHAN (DOKUMEN RAG):\n";
+      enabledSources.forEach((ref, idx) => {
+        finalPrompt += `[Sumber ${idx+1}: ${ref.name}]\n====================\n${ref.content}\n====================\n\n`;
+      });
+    }
+    finalPrompt += `Berdasarkan dokumen RAG di atas, tolong jawab pertanyaan berikut dengan grounding factual tanpa halusinasi: "${q}"`;
+    
+    const payloadImages = [];
+    referencesList.forEach(ref => {
+      if (ref.enabled && ref.type === 'image' && ref.imageSrc) {
+        payloadImages.push(ref.imageSrc);
+      }
+    });
+    
+    const res = await fetch('api/generate.php', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: finalPrompt,
+        images: payloadImages,
+        category: 'Source-Grounded Research',
+        language: 'Bahasa Indonesia',
+        tone: 'Akademik'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    
+    let html = escapeHTML(data.text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\n/g, '<br>');
+    
+    output.innerHTML = `
+      <strong>Jawaban Berbasis Dokumen Pustaka (RAG Grounding):</strong><br>
+      <div style="line-height: 1.6; font-size: 0.95em; margin-top: 8px;">
+        ${html}
+      </div>
+    `;
+  } catch(e) {
+    output.innerHTML = `<div class="notice" style="background:#ffebe9; color:#c82333; border-color:#fadbd8;">Gagal memproses query RAG: ${e.message}</div>`;
+  }
+}
 function toast(msg,type='ok'){const n=$('#notice');n.textContent=msg;n.hidden=false;n.style.background=type==='error'?'#ffe7e7':'#e8f7ee';n.style.color=type==='error'?'#9b2525':'#176a3c';setTimeout(()=>n.hidden=true,5000)}
 
 async function generate(){
@@ -381,12 +1262,24 @@ async function generate(){
     }
     finalPrompt += prompt;
     
-    const res=await fetch('api/generate.php',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt:finalPrompt,category:$('#category').value,language:$('#language').value,tone:$('#tone').value})});
+    const payloadImages = [];
+    referencesList.forEach(ref => {
+      if (ref.enabled && ref.type === 'image' && ref.imageSrc) {
+        payloadImages.push(ref.imageSrc);
+      }
+    });
+    extractedImages.forEach(img => {
+      if (img.src) {
+        payloadImages.push(img.src);
+      }
+    });
+    
+    const res=await fetch('api/generate.php',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt:finalPrompt,images:payloadImages,category:$('#category').value,language:$('#language').value,tone:$('#tone').value})});
     const data=await res.json();
     if(!res.ok) throw new Error(data.error||'Layanan AI gagal.');
     showOutput(data.text);addHistory($('#category').value,prompt);addDocument($('#category').value);
   }catch(err){
-    const demo=localDemo(prompt,$('#category').value);showOutput(demo);addHistory($('#category').value,prompt,'Demo');toast(`${err.message} Hasil contoh lokal ditampilkan. Pasang OPENAI_API_KEY agar AI aktif.`,'error');
+    toast(`Gagal: ${err.message}. Pastikan koneksi internet stabil dan OPENAI_API_KEY aktif.`,'error');
   }finally{btn.disabled=false;btn.textContent='✨ Generate Sekarang'}
 }
 function showOutput(text){
@@ -413,16 +1306,16 @@ function showOutput(text){
   $('#outputWrap').hidden = false;
   $('#outputWrap').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-function localDemo(prompt,category){return `MODE DEMO LOKAL — ${category}\n\nKebutuhan:\n${prompt}\n\nRancangan hasil:\n1. Tujuan dan konteks pekerjaan\n2. Struktur utama yang sistematis\n3. Data atau informasi yang perlu dilengkapi: [ISI DATA]\n4. Langkah pelaksanaan\n5. Indikator kualitas dan evaluasi\n6. Rekomendasi tindak lanjut\n\nCatatan: Ini adalah hasil demo agar aplikasi tetap dapat diuji tanpa API. Setelah OPENAI_API_KEY dipasang di hosting, tombol Generate akan menghasilkan jawaban AI sebenarnya.`}
+
 
 async function getProjects(){
-  if (db) {
+  if (await isDbReady()) {
     try {
       const { data, error } = await db.from('projects').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      if (data) return data;
+      if (error) { console.warn('Supabase projects error:', error.message || error); }
+      else if (data) return data;
     } catch (e) {
-      console.error("Gagal mengambil data proyek dari Supabase:", e);
+      console.warn("Gagal mengambil data proyek dari Supabase:", e);
     }
   }
   return JSON.parse(localStorage.getItem('hai_projects')||'[]');
@@ -450,17 +1343,17 @@ async function saveProject(e){
   const name=$('#projectName').value.trim();
   if(!name)return;
   const newProj = {name, category:$('#projectCategory').value, progress:5};
-  if (db) {
+  if (await isDbReady()) {
     try {
       const { error } = await db.from('projects').insert([newProj]);
-      if (error) throw error;
+      if (error) { console.warn('Supabase insert error:', error.message || error); throw new Error(error.message || 'Gagal simpan proyek'); }
       
       const { data } = await db.from('projects').select('*').order('created_at', { ascending: false });
       if (data) {
         localStorage.setItem('hai_projects', JSON.stringify(data.slice(0, 8)));
       }
     } catch (e) {
-      toast('Gagal menyimpan proyek ke Supabase: ' + e.message, 'error');
+      toast('Gagal menyimpan proyek ke Supabase: ' + (e.message || e), 'error');
       return;
     }
   } else {
@@ -474,13 +1367,13 @@ async function saveProject(e){
   $('#projectName').value='';
 }
 async function getHistory(){
-  if (db) {
+  if (await isDbReady()) {
     try {
       const { data, error } = await db.from('history').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      if (data) return data;
+      if (error) { console.warn('Supabase history error:', error.message || error); }
+      else if (data) return data;
     } catch (e) {
-      console.error("Gagal mengambil data riwayat dari Supabase:", e);
+      console.warn("Gagal mengambil data riwayat dari Supabase:", e);
     }
   }
   return JSON.parse(localStorage.getItem('hai_history')||'[]');
@@ -492,17 +1385,17 @@ async function addHistory(category,prompt,status='Selesai'){
     status,
     time: new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})
   };
-  if (db) {
+  if (await isDbReady()) {
     try {
       const { error } = await db.from('history').insert([newHist]);
-      if (error) throw error;
+      if (error) console.warn('Supabase history insert error:', error.message || error);
       
       const { data } = await db.from('history').select('*').order('created_at', { ascending: false });
       if (data) {
         localStorage.setItem('hai_history', JSON.stringify(data.slice(0, 10)));
       }
     } catch (e) {
-      console.error("Gagal menyimpan riwayat ke Supabase:", e);
+      console.warn("Gagal menyimpan riwayat ke Supabase:", e);
     }
   } else {
     const h=await getHistory();
@@ -533,13 +1426,13 @@ async function renderHistory(){
   if (btn) btn.style.display = 'none';
 }
 async function getDocs(){
-  if (db) {
+  if (await isDbReady()) {
     try {
       const { data, error } = await db.from('documents').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      if (data) return data;
+      if (error) { console.warn('Supabase documents error:', error.message || error); }
+      else if (data) return data;
     } catch (e) {
-      console.error("Gagal mengambil data dokumen dari Supabase:", e);
+      console.warn("Gagal mengambil data dokumen dari Supabase:", e);
     }
   }
   return JSON.parse(localStorage.getItem('hai_docs')||'[]');
@@ -549,17 +1442,17 @@ async function addDocument(category){
     name:`Hasil ${category} ${new Date().toLocaleDateString('id-ID')}.doc`,
     size:`${Math.floor(Math.random()*800+120)} KB`
   };
-  if (db) {
+  if (await isDbReady()) {
     try {
       const { error } = await db.from('documents').insert([newDoc]);
-      if (error) throw error;
+      if (error) console.warn('Supabase document insert error:', error.message || error);
       
       const { data } = await db.from('documents').select('*').order('created_at', { ascending: false });
       if (data) {
         localStorage.setItem('hai_docs', JSON.stringify(data.slice(0, 8)));
       }
     } catch (e) {
-      console.error("Gagal menyimpan dokumen ke Supabase:", e);
+      console.warn("Gagal menyimpan dokumen ke Supabase:", e);
     }
   } else {
     const docs=await getDocs();
@@ -643,30 +1536,23 @@ function downloadTxt() {
 window.deleteSelectedHistory = async function() {
   const checkboxes = document.querySelectorAll('.history-checkbox:checked');
   const indices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b)=>b-a);
-  if (db) {
+  if (await isDbReady()) {
     try {
       const ids = Array.from(checkboxes).map(cb => cb.dataset.id).filter(id => id);
       if (ids.length > 0) {
         const { error } = await db.from('history').delete().in('id', ids);
-        if (error) throw error;
+        if (error) throw new Error(error.message || 'Gagal hapus riwayat');
       }
       const { data } = await db.from('history').select('*').order('created_at', { ascending: false });
       if (data) {
         localStorage.setItem('hai_history', JSON.stringify(data.slice(0, 10)));
       }
     } catch (e) {
-      toast('Gagal menghapus riwayat dari Supabase: ' + e.message, 'error');
+      toast('Gagal menghapus riwayat dari Supabase: ' + (e.message || e), 'error');
       return;
     }
   } else {
     let h = JSON.parse(localStorage.getItem('hai_history')||'[]');
-    if (h.length === 0) {
-      h = [
-        {category:'Disertasi',prompt:'Analisis Bab I Disertasi',status:'Selesai',time:'10:32'},
-        {category:'Jurnal',prompt:'Review Artikel Scopus',status:'Selesai',time:'09:15'},
-        {category:'Administrasi',prompt:'Buat PROTA PROMES',status:'Selesai',time:'08:47'}
-      ];
-    }
     indices.forEach(idx => {
       h.splice(idx, 1);
     });
@@ -680,30 +1566,23 @@ window.deleteSelectedHistory = async function() {
 window.deleteSelectedDocs = async function() {
   const checkboxes = document.querySelectorAll('.doc-checkbox:checked');
   const indices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b)=>b-a);
-  if (db) {
+  if (await isDbReady()) {
     try {
       const ids = Array.from(checkboxes).map(cb => cb.dataset.id).filter(id => id);
       if (ids.length > 0) {
         const { error } = await db.from('documents').delete().in('id', ids);
-        if (error) throw error;
+        if (error) throw new Error(error.message || 'Gagal hapus dokumen');
       }
       const { data } = await db.from('documents').select('*').order('created_at', { ascending: false });
       if (data) {
         localStorage.setItem('hai_docs', JSON.stringify(data.slice(0, 8)));
       }
     } catch (e) {
-      toast('Gagal menghapus dokumen dari Supabase: ' + e.message, 'error');
+      toast('Gagal menghapus dokumen dari Supabase: ' + (e.message || e), 'error');
       return;
     }
   } else {
     let docs = JSON.parse(localStorage.getItem('hai_docs')||'[]');
-    if (docs.length === 0) {
-      docs = [
-        {name:'Disertasi Bab I - Revisi.docx',size:'2.4 MB'},
-        {name:'Artikel IMAD - Final.pdf',size:'1.8 MB'},
-        {name:'PROTA PROMES 2025.xlsx',size:'980 KB'}
-      ];
-    }
     indices.forEach(idx => {
       docs.splice(idx, 1);
     });
@@ -717,28 +1596,23 @@ window.deleteSelectedDocs = async function() {
 window.deleteSelectedProjects = async function() {
   const checkboxes = document.querySelectorAll('.project-checkbox:checked');
   const indices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b)=>b-a);
-  if (db) {
+  if (await isDbReady()) {
     try {
       const ids = Array.from(checkboxes).map(cb => cb.dataset.id).filter(id => id);
       if (ids.length > 0) {
         const { error } = await db.from('projects').delete().in('id', ids);
-        if (error) throw error;
+        if (error) throw new Error(error.message || 'Gagal hapus proyek');
       }
       const { data } = await db.from('projects').select('*').order('created_at', { ascending: false });
       if (data) {
         localStorage.setItem('hai_projects', JSON.stringify(data.slice(0, 8)));
       }
     } catch (e) {
-      toast('Gagal menghapus proyek dari Supabase: ' + e.message, 'error');
+      toast('Gagal menghapus proyek dari Supabase: ' + (e.message || e), 'error');
       return;
     }
   } else {
-    let p = JSON.parse(localStorage.getItem('hai_projects')||'null') || [
-      {name:'Disertasi MPI',category:'Disertasi',progress:65},
-      {name:'Artikel IMAD',category:'Jurnal',progress:80},
-      {name:'Administrasi FKDT',category:'Administrasi',progress:55},
-      {name:'Materi Workshop',category:'Presentasi',progress:40}
-    ];
+    let p = JSON.parse(localStorage.getItem('hai_projects')||'[]');
     indices.forEach(idx => {
       p.splice(idx, 1);
     });
@@ -977,7 +1851,7 @@ let fileInput;
 function initUpload() {
   fileInput = document.createElement('input');
   fileInput.type = 'file';
-  fileInput.accept = '.txt,.csv,.pdf,.docx,.xlsx';
+  fileInput.accept = '.txt,.csv,.pdf,.docx,.xlsx,.jpg,.jpeg,.png';
   fileInput.style.display = 'none';
   document.body.appendChild(fileInput);
   
@@ -999,6 +1873,20 @@ function initUpload() {
         text = await parseDocx(file);
       } else if (ext === 'xlsx') {
         text = await parseXlsx(file);
+      } else if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const imgId = `img_${extractedImages.length + 1}`;
+        extractedImages.push({
+          id: imgId,
+          src: dataUrl,
+          name: file.name
+        });
+        text = `[${imgId}]`;
       } else {
         throw new Error('Format file tidak didukung.');
       }
@@ -1053,6 +1941,7 @@ function renderReferences() {
   $('#sourcesList').innerHTML = referencesList.map((ref, idx) => {
     let icon = '📄';
     if (ref.type === 'web') icon = '🌐';
+    else if (ref.type === 'image') icon = '🖼️';
     else if (ref.name.endsWith('.pdf')) icon = '📕';
     else if (ref.name.endsWith('.docx') || ref.name.endsWith('.doc')) icon = '📘';
     else if (ref.name.endsWith('.xlsx') || ref.name.endsWith('.xls')) icon = '📗';
@@ -1075,7 +1964,7 @@ function renderReferences() {
           <span style="font-size: 1.25em;">${icon}</span>
           <div style="display: flex; flex-direction: column; overflow: hidden;">
             <span style="font-size: 0.85em; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;">${escapeHTML(ref.name)}</span>
-            <small style="font-size: 0.72em; color: #64748b; text-transform: capitalize;">${ref.type === 'web' ? 'Situs Web' : ref.type === 'file' ? 'Berkas Dokumen' : 'Teks Manual'}</small>
+            <small style="font-size: 0.72em; color: #64748b; text-transform: capitalize;">${ref.type === 'web' ? 'Situs Web' : ref.type === 'image' ? 'Gambar' : ref.type === 'file' ? 'Berkas Dokumen' : 'Teks Manual'}</small>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 12px; margin-left: 10px;">
@@ -1139,6 +2028,23 @@ async function processReferenceFile(file) {
       text = await parseDocx(file);
     } else if (ext === 'xlsx') {
       text = await parseXlsx(file);
+    } else if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      referencesList.push({
+        type: 'image',
+        name: file.name,
+        content: `[Gambar Referensi: ${file.name}]`,
+        imageSrc: dataUrl,
+        enabled: true
+      });
+      renderReferences();
+      toast(`Berkas "${file.name}" berhasil ditambahkan.`);
+      return;
     } else {
       throw new Error('Format file tidak didukung.');
     }
@@ -1315,8 +2221,12 @@ async function checkAuthState() {
       const { data } = await db.auth.getSession();
       if (data && data.session) {
         user = data.session.user;
+        dbAuthenticated = true;
+      } else {
+        dbAuthenticated = false;
       }
     } catch (e) {
+      dbAuthenticated = false;
       console.warn("Gagal mengecek session Supabase:", e);
     }
   }

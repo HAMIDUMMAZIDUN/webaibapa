@@ -21,15 +21,41 @@ if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
     exit;
 }
 
-// Inisialisasi cURL untuk mengunduh halaman web
+// Pencegahan SSRF: Validasi Host dan Resolusi IP
+$host = parse_url($url, PHP_URL_HOST);
+if (!$host) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Host tidak ditemukan dalam URL.']);
+    exit;
+}
+
+if (strcasecmp($host, 'localhost') === 0 || $host === '::1') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Akses ke localhost tidak diizinkan.']);
+    exit;
+}
+
+$ip = gethostbyname($host);
+if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) || 
+    !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) ||
+    $ip === '127.0.0.1' || 
+    $ip === '0.0.0.0') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Akses ke alamat IP privat atau lokal tidak diizinkan.']);
+    exit;
+}
+
+// Inisialisasi cURL dengan proteksi DNS rebinding
+$port = (parse_url($url, PHP_URL_SCHEME) === 'https') ? 443 : 80;
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+curl_setopt($ch, CURLOPT_RESOLVE, ["$host:$port:$ip"]);
 curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
 $html = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

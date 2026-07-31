@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
+header('X-Frame-Options: DENY');
 
 function respond(int $status, array $payload): never
 {
@@ -62,6 +63,10 @@ if (!is_array($payload)) {
 }
 
 $prompt = trim((string)($payload['prompt'] ?? ''));
+$images = $payload['images'] ?? [];
+if (!is_array($images)) {
+    $images = [];
+}
 $category = trim((string)($payload['category'] ?? 'Umum'));
 $language = trim((string)($payload['language'] ?? 'Bahasa Indonesia'));
 $tone = trim((string)($payload['tone'] ?? 'Profesional'));
@@ -105,6 +110,23 @@ if (!function_exists('curl_init')) {
 
 $instructions = "Anda adalah Hidayat AI Generator, asisten profesional untuk akademik, pendidikan, penelitian, administrasi, presentasi, desain, dan kebutuhan umum. Jawab dalam {$language}. Gaya: {$tone}. Kategori pekerjaan: {$category}. Susun hasil yang jelas, sistematis, dapat langsung digunakan, dan jangan mengarang sumber atau data. Bila data penting belum tersedia, gunakan penanda [ISI DATA].";
 
+$userContent = [];
+$userContent[] = [
+    'type' => 'text',
+    'text' => $prompt
+];
+
+foreach ($images as $img) {
+    if (is_string($img) && str_starts_with($img, 'data:image/')) {
+        $userContent[] = [
+            'type' => 'image_url',
+            'image_url' => [
+                'url' => $img
+            ]
+        ];
+    }
+}
+
 $requestBody = [
     'model' => $model,
     'messages' => [
@@ -114,17 +136,20 @@ $requestBody = [
         ],
         [
             'role' => 'user',
-            'content' => $prompt
+            'content' => count($userContent) > 1 ? $userContent : $prompt
         ]
     ]
 ];
 
 $ch = curl_init("https://api.openai.com/v1/chat/completions");
+$startTime = microtime(true);
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_CONNECTTIMEOUT => 15,
     CURLOPT_TIMEOUT => 120,
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_SSL_VERIFYHOST => 2,
     CURLOPT_HTTPHEADER => [
         'Content-Type: application/json',
         'Authorization: Bearer ' . $apiKey,
@@ -162,8 +187,55 @@ if ($text === '') {
     respond(502, ['error' => "Layanan AI tidak menghasilkan teks. Alasan: {$finishReason}."]);
 }
 
+// Ekstrak token usage dari response OpenAI
+$usage = $response['usage'] ?? [];
+$promptTokens = (int)($usage['prompt_tokens'] ?? 0);
+$completionTokens = (int)($usage['completion_tokens'] ?? 0);
+$totalTokens = $promptTokens + $completionTokens;
+$latencyMs = (int)((microtime(true) - $startTime) * 1000);
+$requestId = (string)($response['id'] ?? '');
+
+// Catat penggunaan token ke database Supabase melalui REST API
+$supabaseUrl = trim((string)($config['supabase_url'] ?? ''));
+$supabaseKey = trim((string)($config['supabase_anon_key'] ?? ''));
+if ($supabaseUrl !== '' && $supabaseKey !== '' && $totalTokens > 0) {
+    $usageData = [
+        'prompt_tokens' => $promptTokens,
+        'completion_tokens' => $completionTokens,
+        'model' => $model,
+        'feature' => $category,
+        'request_id' => $requestId,
+        'latency_ms' => $latencyMs,
+        'status' => 'success',
+        'estimated_cost' => round(($promptTokens * 0.00015 + $completionTokens * 0.0006) / 1000, 6),
+    ];
+    $logCh = curl_init($supabaseUrl . '/rest/v1/ai_usage');
+    curl_setopt_array($logCh, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 5,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'apikey: ' . $supabaseKey,
+            'Authorization: Bearer ' . $supabaseKey,
+            'Prefer: return=minimal',
+        ],
+        CURLOPT_POSTFIELDS => json_encode($usageData),
+    ]);
+    @curl_exec($logCh);
+    @curl_close($logCh);
+}
+
 respond(200, [
     'text' => $text,
     'model' => $model,
-    'request_id' => '',
+    'request_id' => $requestId,
+    'usage' => [
+        'prompt_tokens' => $promptTokens,
+        'completion_tokens' => $completionTokens,
+        'total_tokens' => $totalTokens,
+        'latency_ms' => $latencyMs,
+    ],
 ]);

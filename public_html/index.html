@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b2d70">
-  <meta name="description" content="Hidayat AI Generator — asisten AI akademik, pendidikan, penelitian, dan administrasi.">
-  <title>Hidayat AI Generator</title>
+  <meta name="description" content="Hidayat AI Workspace — asisten AI akademik, pendidikan, penelitian, dan administrasi.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.openai.com https://*.supabase.co https://id.wikipedia.org https://html.duckduckgo.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com;">
+  <title>Hidayat AI Workspace</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/logo.svg">
   <link rel="stylesheet" href="styles.css">
@@ -94,20 +95,17 @@
   <!-- Header Navigasi Global Premium -->
   <header style="background: linear-gradient(135deg, #071d4a 0%, #092b6d 100%); color: #fff; padding: 12px 24px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
     <div style="display: flex; align-items: center; gap: 12px;">
+      <button id="menuBtn" class="menu-btn" style="background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; display: none; margin-right: 6px; padding: 4px;">☰</button>
       <div>
         <strong style="font-size: 1.15em; display: block; letter-spacing: 0.5px; font-weight: 700;">Hidayat AI</strong>
         <span style="font-size: 0.7em; color: #bfd6ff; display: block; margin-top: 1px; font-weight: 500;">Workspace AI Akademik & Administrasi</span>
       </div>
     </div>
     
-    <!-- Tab Navigasi Halaman -->
-    <nav style="display: flex; gap: 8px;">
-      <button class="nav-tab active" data-page="dashboard">🏠 Beranda</button>
-      <button class="nav-tab" data-page="generator">🧠 AI Workspace</button>
-      <button class="nav-tab" data-page="projects">📁 Riwayat & Proyek</button>
-    </nav>
-    
     <div style="display: flex; align-items: center; gap: 16px;">
+      <!-- Theme Switcher Button -->
+      <button id="themeToggleBtn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; width: 34px; height: 34px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1em; transition: background 0.2s; padding: 0; outline: none;" title="Ganti Mode Terang/Gelap">☀️</button>
+      
       <!-- Search Input -->
       <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; width: 180px;">
         <span style="color: #bfd6ff; font-size: 0.85em;">⌕</span>
@@ -125,8 +123,58 @@
     </div>
   </header>
 
-  <div class="app-shell" style="min-height: calc(100vh - 66px); display: flex; flex-direction: column;">
-    <main class="main" style="width: 100%; max-width: 1300px; margin: 0 auto; padding: 20px 24px; box-sizing: border-box;">
+  <div class="app-shell" style="min-height: calc(100vh - 66px); display: flex;">
+    <!-- Sidebar Kiri Modular -->
+    <aside id="sidebar" class="sidebar">
+      <nav style="display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: calc(100vh - 180px); padding-right: 4px;">
+        <button class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span> Beranda</button>
+        <button class="nav-item" data-page="generator"><span class="nav-icon">🧠</span> AI Workspace</button>
+
+        <!-- PENULISAN & PENERBITAN -->
+        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">✍️ Penulisan & Penerbitan</div>
+        <button class="nav-item" data-page="author-studio"><span class="nav-icon">✍️</span> Author Studio</button>
+        <button class="nav-item" data-page="curriculum"><span class="nav-icon">🗺️</span> Curriculum Mapper</button>
+        <button class="nav-item" data-page="publishing"><span class="nav-icon">🏛️</span> Publishing Center</button>
+
+        <!-- REFERENSI ISLAM -->
+        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">📖 Referensi Islam</div>
+        <button class="nav-item" data-page="quran"><span class="nav-icon">📖</span> Qur'an &amp; Tafsir</button>
+        <button class="nav-item" data-page="hadith"><span class="nav-icon">🔍</span> Verifikasi Hadis</button>
+        <button class="nav-item" data-page="kitab"><span class="nav-icon">📚</span> Perpustakaan Kitab</button>
+        <button class="nav-item" data-page="dawah"><span class="nav-icon">🎙️</span> Da'wah Studio</button>
+
+        <!-- KODING & OTOMASI -->
+        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">⚡ Koding &amp; Otomasi</div>
+        <button class="nav-item" data-page="gas"><span class="nav-icon">⚡</span> Apps Script Builder</button>
+        <button class="nav-item" data-page="excel-studio"><span class="nav-icon">📊</span> Excel &amp; Sheets</button>
+        <button class="nav-item" data-page="word-studio"><span class="nav-icon">📝</span> Word &amp; Docs</button>
+        <button class="nav-item" data-page="code-reviewer"><span class="nav-icon">🛡️</span> Code Reviewer</button>
+
+        <!-- RISET & SUMBER -->
+        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">🔬 Riset &amp; Sumber</div>
+        <button class="nav-item" data-page="rag-research"><span class="nav-icon">🔬</span> RAG Research</button>
+        <button class="nav-item" data-page="pustaka-ref"><span class="nav-icon">🗂️</span> Pustaka Referensi</button>
+
+        <!-- MANAJEMEN -->
+        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">📁 Manajemen</div>
+        <button class="nav-item" data-page="projects"><span class="nav-icon">📁</span> Proyek Saya</button>
+        <button class="nav-item" data-page="templates"><span class="nav-icon">▦</span> Template</button>
+        <button class="nav-item" data-page="storage"><span class="nav-icon">☁️</span> Penyimpanan</button>
+        <button class="nav-item" data-page="history-page"><span class="nav-icon">⏱️</span> Riwayat</button>
+        <button class="nav-item" data-page="settings-ai"><span class="nav-icon">⚙️</span> Pengaturan AI</button>
+        <button class="nav-item" data-page="profile"><span class="nav-icon">👤</span> Profil</button>
+        <button class="nav-item" data-page="help"><span class="nav-icon">❓</span> Bantuan</button>
+      </nav>
+      <div style="margin-top: 14px; border: 1px solid rgba(255,255,255,0.15); background: linear-gradient(135deg, #1e3a8a, #3b82f6); border-radius: 12px; padding: 12px; display: flex; gap: 10px; align-items: center;">
+        <span style="font-size: 20px;">👑</span>
+        <div>
+          <strong style="font-size: 0.85em; color: #fff;">Versi Premium</strong>
+          <small style="font-size: 0.72em; color: #d9e6ff; display: block; margin-top: 2px;">Akses fitur tak terbatas</small>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main" style="flex: 1; min-width: 0; padding: 20px 24px; box-sizing: border-box;">
       
       <!-- Halaman 1: Beranda / Dashboard -->
       <div class="app-page" id="page-dashboard">
@@ -205,7 +253,7 @@
                   📋 Teks yang disalin
                 </button>
               </div>
-              <input type="file" id="refCardFileInput" accept=".txt,.csv,.pdf,.docx,.xlsx" style="display: none;" />
+              <input type="file" id="refCardFileInput" accept=".txt,.csv,.pdf,.docx,.xlsx,.jpg,.jpeg,.png" style="display: none;" />
             </div>
 
             <!-- Telusuri sumber baru di web (Second Screenshot) -->
@@ -301,6 +349,605 @@
               <div class="document-list" id="documents"></div>
             </section>
           </div>
+        </div>
+      </div>
+
+      <!-- Halaman 3: Author Studio -->
+      <div class="app-page" id="page-author-studio" style="display: none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>✍️ Author Studio</h2>
+              <p class="muted">Penyusunan naskah buku kurikulum umum & agama (MI, MTs, MA)</p>
+            </div>
+            <button class="primary" id="btnAuthorNewBook" style="padding: 10px 16px;">+ Buku Baru</button>
+          </div>
+          <!-- 3-Panel Workspace Layout -->
+          <div style="display: grid; grid-template-columns: 240px 1fr 280px; gap: 16px; margin-top: 16px; height: 600px;" class="form-grid-3panel">
+            <!-- Panel 1: Chapter Outline Structure -->
+            <div style="border-right: 1px solid var(--border); padding-right: 12px; display: flex; flex-direction: column; gap: 10px;">
+              <h3 style="font-size: 0.9em; text-transform: uppercase; color: var(--muted); margin: 0;">Daftar Bab</h3>
+              <div id="authorChapters" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+                <div class="notice" style="margin: 0; padding: 8px; font-size: 0.85em;">Belum ada proyek buku aktif. Silakan buat buku baru.</div>
+              </div>
+            </div>
+            <!-- Panel 2: Rich Editor Area -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <input id="authorChapterTitle" placeholder="Pilih atau tulis judul bab..." style="font-size: 1.15em; font-weight: bold; border: none; background: transparent; padding: 0; outline: none; margin: 0;" disabled />
+                <span class="badge" style="background: #eef2ff; color: #4f46e5;" id="authorChapterStatus">Draft</span>
+              </div>
+              <textarea id="authorEditor" placeholder="Tulis konten bab di sini... Gunakan integrasi AI di sebelah kanan untuk membantu penulisan." style="flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 0.95em; width: 100%;" disabled></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; color: var(--muted); margin-top: 6px;">
+                <span id="authorWordCount">0 kata</span>
+                <div>
+                  <button class="secondary" style="padding: 6px 10px;" id="authorSaveBtn" disabled>Autosave Aktif</button>
+                  <button class="primary" style="padding: 6px 10px;" id="authorExportBtn" disabled>Ekspor Bab</button>
+                </div>
+              </div>
+            </div>
+            <!-- Panel 3: AI Assistant & Reference Grounding -->
+            <div style="border-left: 1px solid var(--border); padding-left: 12px; display: flex; flex-direction: column; gap: 12px;">
+              <h3 style="font-size: 0.9em; text-transform: uppercase; color: var(--muted); margin: 0;">Asisten Penulis AI</h3>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label style="font-size: 0.8em; font-weight: bold;">Gaya Bahasa / Modul Jenjang</label>
+                <select id="authorJenjang" style="margin-top: 2px; padding: 6px;">
+                  <option>Madrasah Ibtidaiyah (MI)</option>
+                  <option>Madrasah Tsanawiyah (MTs)</option>
+                  <option selected>Madrasah Aliyah (MA)</option>
+                </select>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 0.8em; font-weight: bold;">Instruksi AI Bab</label>
+                <textarea id="authorAiPrompt" placeholder="Contoh: Kembangkan subbab A tentang Akhlak Terpuji..." style="height: 80px; resize: none; min-height: unset; font-size: 0.85em;"></textarea>
+                <button class="primary generate" style="width: 100%; font-size: 0.9em; padding: 10px;" id="btnGenerateAuthor">Generate Draf</button>
+                <div style="flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 0.8em; overflow-y: auto; background: #fbfbfc; min-height: 100px;" class="output" id="authorAiSuggestion">
+                  Saran AI akan muncul di sini.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman 4: Curriculum Mapper -->
+      <div class="app-page" id="page-curriculum" style="display: none;">
+        <div class="panel">
+          <h2>🗺️ Curriculum Mapper</h2>
+          <p class="muted">Petakan Rencana Pembelajaran dan Alur Tujuan Pembelajaran (ATP) langsung ke Bab Buku.</p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;" class="form-grid-2panel">
+            <div class="panel" style="box-shadow: none; border-color: var(--border);">
+              <h3>Form Pemetaan KI / KD / TP</h3>
+              <div class="form-grid" style="grid-template-columns: 1fr; gap: 12px; margin-top: 10px;">
+                <label style="font-weight: bold;">Pilih Proyek Buku
+                  <select id="curriculumProjectSelect" style="margin-top:4px;"></select>
+                </label>
+                <label style="font-weight: bold;">Elemen Kurikulum / Capaian Pembelajaran
+                  <input id="curriculumElement" placeholder="Contoh: Fikih Ibadah" style="margin-top:4px;" />
+                </label>
+                <label style="font-weight: bold;">Tujuan Pembelajaran (TP) / Indikator
+                  <textarea id="curriculumTarget" placeholder="Contoh: Peserta didik mampu menganalisis tata cara bersuci..." style="margin-top:4px; min-height: 80px;"></textarea>
+                </label>
+                <button class="primary" id="btnSaveCurriculum" style="padding: 10px 14px;">Petakan ke Proyek</button>
+              </div>
+            </div>
+            <div class="panel" style="box-shadow: none; border-color: var(--border);">
+              <h3>Matriks Pemetaan Aktif</h3>
+              <div style="overflow-x: auto; margin-top: 10px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                  <thead>
+                    <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                      <th style="padding: 8px;">Elemen</th>
+                      <th style="padding: 8px;">Tujuan Pembelajaran</th>
+                      <th style="padding: 8px;">Status Bab</th>
+                    </tr>
+                  </thead>
+                  <tbody id="curriculumTableBody">
+                    <tr>
+                      <td colspan="3" style="text-align: center; padding: 12px; color: var(--muted);">Belum ada data pemetaan kurikulum.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman 5: Qur'an & Tafsir -->
+      <div class="app-page" id="page-quran" style="display: none;">
+        <div class="panel">
+          <h2>📖 Pusat Al-Qur'an & Tafsir</h2>
+          <p class="muted">Cari, sitasi, dan bandingkan ayat Al-Qur'an serta kitab tafsir secara instan tanpa kesalahan teks.</p>
+          <div style="margin-top: 16px; display: grid; grid-template-columns: 300px 1fr; gap: 16px;" class="form-grid-2panel">
+            <div class="panel" style="box-shadow: none; border-color: var(--border);">
+              <h3>Pencarian Ayat</h3>
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                <label style="font-weight: bold;">Pilih Surah
+                  <select id="quranSurahSelect" style="margin-top:4px;">
+                    <option value="1">1. Al-Fatihah (Pembukaan)</option>
+                    <option value="2">2. Al-Baqarah (Sapi Betina)</option>
+                    <option value="3">3. Ali 'Imran (Keluarga Imran)</option>
+                    <option value="4">4. An-Nisa' (Wanita)</option>
+                    <option value="5">5. Al-Ma'idah (Hidangan)</option>
+                    <option value="96">96. Al-'Alaq (Segumpal Darah)</option>
+                    <option value="112">112. Al-Ikhlas (Keesaan Allah)</option>
+                  </select>
+                </label>
+                <label style="font-weight: bold;">Nomor Ayat
+                  <input type="number" id="quranAyatNum" min="1" value="1" placeholder="Contoh: 1" style="margin-top:4px;" />
+                </label>
+                <button class="primary" id="btnFetchQuran" style="padding: 10px;">Cari Ayat</button>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
+                <label style="font-weight: bold;">Pencarian Kata Kunci Tematik
+                  <input id="quranKeyword" placeholder="Contoh: takwa" style="margin-top:4px;" />
+                </label>
+                <button class="secondary" id="btnSearchQuran" style="padding: 10px;">Cari Tematik</button>
+              </div>
+            </div>
+            <div class="panel" style="box-shadow: none; border-color: var(--border); display: flex; flex-direction: column; gap: 10px;">
+              <h3>Hasil Pencarian Ayat & Referensi</h3>
+              <div id="quranAyatOutput" class="output" style="flex: 1; min-height: 250px; background: #fafcff; font-family: 'Times New Roman', serif; font-size: 1.1em; line-height: 1.8;">
+                Hasil teks Arab, terjemahan resmi Kemenag, dan tafsir perbandingan akan muncul di sini.
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                <button class="secondary" id="btnCopyQuran" disabled style="padding: 8px 12px;">Salin Sitasi</button>
+                <button class="primary" id="btnAddQuranSource" disabled style="padding: 8px 12px;">Tambahkan Sebagai Sumber</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman 6: Verifikasi Hadis -->
+      <div class="app-page" id="page-hadith" style="display: none;">
+        <div class="panel">
+          <h2>🔍 Verifikasi Hadis & Takhrij</h2>
+          <p class="muted">Verifikasi teks hadis, ketahui perawi, nomor hadis, serta derajat kesahihannya untuk menjaga kualitas rujukan.</p>
+          <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px;" class="form-grid-2panel">
+            <div class="panel" style="box-shadow: none; border-color: var(--border); display: flex; flex-direction: column; gap: 10px;">
+              <h3>Input Teks Hadis</h3>
+              <textarea id="hadithInput" placeholder="Masukkan potongan matan hadis atau kata kunci (Indonesia/Arab). Contoh: amal tergantung niat" style="flex: 1; min-height: 120px;"></textarea>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <label style="font-weight: bold;">Kitab Rujukan
+                  <select id="hadithKitab" style="margin-top:4px;">
+                    <option>Semua (Kutubut Tis'ah)</option>
+                    <option>Shahih Bukhari</option>
+                    <option>Shahih Muslim</option>
+                    <option>Sunan Abu Dawud</option>
+                    <option>Sunan Tirmidzi</option>
+                  </select>
+                </label>
+                <label style="font-weight: bold;">Nomor Hadis (Opsional)
+                  <input type="number" id="hadithNumber" placeholder="Contoh: 1" style="margin-top:4px;" />
+                </label>
+              </div>
+              <button class="primary" id="btnVerifyHadith" style="padding: 10px 14px; margin-top: 8px;">Verifikasi & Takhrij</button>
+            </div>
+            <div class="panel" style="box-shadow: none; border-color: var(--border); display: flex; flex-direction: column; gap: 10px;">
+              <h3>Hasil Verifikasi Hadis</h3>
+              <div id="hadithOutput" class="output" style="flex: 1; min-height: 200px;">
+                Informasi takhrij, rawi, derajat kesahihan, dan teks lengkap hadis akan muncul di sini.
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                <button class="secondary" id="btnCopyHadith" disabled style="padding: 8px 12px;">Salin Sitasi</button>
+                <button class="primary" id="btnAddHadithSource" disabled style="padding: 8px 12px;">Tambahkan Sebagai Sumber</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman 7: Perpustakaan Kitab -->
+      <div class="app-page" id="page-kitab" style="display: none;">
+        <div class="panel">
+          <h2>📚 Perpustakaan Kitab Klasik</h2>
+          <p class="muted">Telusuri ribuan kitab kuning klasik terverifikasi dari repositori terpercaya.</p>
+          <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; gap: 10px;">
+              <input id="kitabSearchInput" placeholder="Cari judul kitab atau pengarang... Contoh: Riyadhus Shalihin" style="flex: 1; margin: 0;" />
+              <button class="primary" id="btnSearchKitab" style="padding: 10px 20px;">Cari Kitab</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;" id="kitabGrid">
+              <div class="notice" style="grid-column: 1 / -1; text-align: center;">Ketik judul kitab klasik di atas untuk mulai mencari.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman 8: Studio Dakwah -->
+      <div class="app-page" id="page-dawah" style="display: none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>🎙️ Studio Dakwah</h2>
+              <p class="muted">Susun materi khutbah, ceramah, kajian, kultum, naskah video, slide, dan handout berdasarkan audiens dan durasi.</p>
+            </div>
+            <button class="primary" id="btnExportDawahWord" style="padding: 8px 14px; font-size: 0.85em;">⬇ Ekspor Word</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 340px 1fr; gap: 16px; margin-top: 4px;" class="form-grid-2panel">
+            <!-- Kolom Kiri: Form -->
+            <div style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 680px; padding-right: 4px;">
+
+              <div class="panel" style="box-shadow: none; border-color: var(--border); padding: 14px;">
+                <h3 style="margin: 0 0 12px; font-size: 0.9em; text-transform: uppercase; color: var(--muted);">Jenis &amp; Identitas</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <label style="font-weight: bold; font-size: 0.85em;">Jenis Materi
+                    <select id="dawahType" style="margin-top: 4px;">
+                      <option value="khutbah-jumat">Khutbah Jum'at (2 Khutbah Lengkap)</option>
+                      <option value="ceramah-10">Ceramah 10 Menit</option>
+                      <option value="ceramah-20" selected>Ceramah 20 Menit</option>
+                      <option value="ceramah-30">Ceramah 30 Menit</option>
+                      <option value="ceramah-45">Ceramah 45 Menit</option>
+                      <option value="ceramah-60">Ceramah 60 Menit</option>
+                      <option value="kultum">Kultum / Tausiyah</option>
+                      <option value="kajian-tematik">Kajian Tematik</option>
+                      <option value="kajian-kitab">Kajian Kitab Kontemporer</option>
+                      <option value="materi-ramadan">Materi Ramadan</option>
+                      <option value="naskah-video">Naskah Video / Podcast</option>
+                      <option value="konten-sosmed">Konten Media Sosial</option>
+                    </select>
+                  </label>
+                  <label style="font-weight: bold; font-size: 0.85em;">Tema Dakwah <span style="color:var(--orange);">*</span>
+                    <input id="dawahTheme" placeholder="Contoh: Keutamaan Menuntut Ilmu" style="margin-top: 4px;" />
+                  </label>
+                  <label style="font-weight: bold; font-size: 0.85em;">Tujuan Dakwah
+                    <input id="dawahGoal" placeholder="Contoh: Memotivasi jamaah untuk belajar agama" style="margin-top: 4px;" />
+                  </label>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <label style="font-weight: bold; font-size: 0.85em;">Durasi (Menit)
+                      <input type="number" id="dawahDuration" value="20" min="5" max="120" style="margin-top: 4px;" />
+                    </label>
+                    <label style="font-weight: bold; font-size: 0.85em;">Tanggal Acara
+                      <input type="date" id="dawahDate" style="margin-top: 4px;" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel" style="box-shadow: none; border-color: var(--border); padding: 14px;">
+                <h3 style="margin: 0 0 12px; font-size: 0.9em; text-transform: uppercase; color: var(--muted);">Audiens &amp; Gaya</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <label style="font-weight: bold; font-size: 0.85em;">Target Audiens
+                    <select id="dawahAudience" style="margin-top: 4px;">
+                      <option value="jamaah-umum" selected>Jamaah Umum</option>
+                      <option value="remaja">Remaja / Pemuda</option>
+                      <option value="siswa">Siswa MI/MTs/MA</option>
+                      <option value="guru">Guru &amp; Pendidik</option>
+                      <option value="ibu-ibu">Ibu-ibu / Majelis Ta'lim</option>
+                      <option value="akademisi">Akademisi / Mahasiswa</option>
+                      <option value="anak">Anak-anak</option>
+                    </select>
+                  </label>
+                  <label style="font-weight: bold; font-size: 0.85em;">Gaya Penyampaian
+                    <select id="dawahStyle" style="margin-top: 4px;">
+                      <option value="edukatif" selected>Edukatif</option>
+                      <option value="persuasif">Persuasif</option>
+                      <option value="reflektif">Reflektif</option>
+                      <option value="populer">Populer / Santai</option>
+                      <option value="akademik">Akademik / Formal</option>
+                    </select>
+                  </label>
+                  <label style="font-weight: bold; font-size: 0.85em;">Mazhab / Rujukan Organisasi
+                    <input id="dawahMazhab" placeholder="Contoh: Syafi'i / NU / Muhammadiyah" style="margin-top: 4px;" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="panel" style="box-shadow: none; border-color: var(--border); padding: 14px;">
+                <h3 style="margin: 0 0 12px; font-size: 0.9em; text-transform: uppercase; color: var(--muted);">Sumber &amp; Referensi</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <label style="font-weight: bold; font-size: 0.85em;">Ayat Al-Qur'an (opsional)
+                    <input id="dawahAyat" placeholder="Contoh: QS. Al-Mujadilah: 11" style="margin-top: 4px;" />
+                  </label>
+                  <label style="font-weight: bold; font-size: 0.85em;">Hadis Utama (opsional)
+                    <input id="dawahHadis" placeholder="Contoh: HR. Bukhari no. 79 tentang menuntut ilmu" style="margin-top: 4px;" />
+                  </label>
+                  <label style="font-weight: bold; font-size: 0.85em;">Contoh Lokal / Kisah
+                    <textarea id="dawahLocalExample" placeholder="Contoh lokal, kisah inspiratif, atau data sosial yang relevan..." style="margin-top: 4px; min-height: 60px;"></textarea>
+                  </label>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label style="font-size: 0.75em; color: var(--muted);">Output yang dihasilkan:</label>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <label style="display:flex; align-items:center; gap:4px; font-size:0.8em; font-weight:normal;"><input type="checkbox" id="dawahOutNaskah" checked style="width:auto; margin:0;"> Naskah Lengkap</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:0.8em; font-weight:normal;"><input type="checkbox" id="dawahOutSlide" checked style="width:auto; margin:0;"> Outline Slide</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:0.8em; font-weight:normal;"><input type="checkbox" id="dawahOutHandout" style="width:auto; margin:0;"> Handout Jamaah</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:0.8em; font-weight:normal;"><input type="checkbox" id="dawahOutTimeline" style="width:auto; margin:0;"> Timeline Waktu</label>
+                </div>
+                <button class="primary generate" id="btnGenerateDawah" style="padding: 12px; margin-top: 4px; width: 100%;">🎙️ Generate Materi Dakwah</button>
+              </div>
+            </div>
+
+            <!-- Kolom Kanan: Output -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Tab Output -->
+              <div style="display: flex; gap: 6px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                <button class="nav-tab active" id="tabDawahNaskah" onclick="showDawahTab('naskah')">📜 Naskah</button>
+                <button class="nav-tab" id="tabDawahSlide" onclick="showDawahTab('slide')">📊 Slide Outline</button>
+                <button class="nav-tab" id="tabDawahHandout" onclick="showDawahTab('handout')">📋 Handout</button>
+              </div>
+              <div id="dawahOutput" class="output" style="flex: 1; min-height: 520px;">
+                <div style="color: var(--muted); font-size: 0.9em; line-height: 1.6;">
+                  Isi form di kiri lalu klik <strong>Generate Materi Dakwah</strong>.<br><br>
+                  ⚠️ <em>Sistem akan menandai dalil lemah/berbeda penilaian dan klaim hukum yang perlu pemeriksaan ahli.</em>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button class="secondary" id="btnCopyDawah" style="padding: 8px 12px; font-size: 0.85em;">📋 Salin</button>
+                <button class="primary" onclick="window.print()" style="padding: 8px 12px; font-size: 0.85em;">🖨️ Cetak</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Halaman 9: Apps Script Builder -->
+      <div class="app-page" id="page-gas" style="display: none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>⚡ Code &amp; Automation Studio</h2>
+              <p class="muted">Buat, perbaiki, dan uji Google Apps Script, rumus Excel/Sheets, Office Scripts/VBA, HTML/JS, serta integrasi API — kode lengkap, bukan potongan.</p>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 320px 1fr; gap: 16px; margin-top: 8px;" class="form-grid-2panel">
+            <!-- Form Kiri -->
+            <div style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 660px; padding-right: 4px;">
+              <label style="font-weight: bold; font-size: 0.85em;">Submodul / Platform
+                <select id="gasSubmodule" style="margin-top: 4px;">
+                  <option value="gas">Google Apps Script</option>
+                  <option value="excel-formula">Rumus Excel / Google Sheets</option>
+                  <option value="vba">VBA Macro (Excel Desktop)</option>
+                  <option value="office-scripts">Office Scripts (Excel Online)</option>
+                  <option value="word-docs">Word / Google Docs Template</option>
+                  <option value="web">HTML / CSS / JavaScript</option>
+                  <option value="backend">Node.js / Python / PHP / Laravel</option>
+                  <option value="debug">Debug &amp; Code Review</option>
+                </select>
+              </label>
+              <label style="font-weight: bold; font-size: 0.85em;">Aksi yang Diinginkan
+                <select id="gasAction" style="margin-top: 4px;">
+                  <option value="buat-baru">Buat Baru dari Awal</option>
+                  <option value="tambah-fitur">Tambah Fitur ke Kode yang Ada</option>
+                  <option value="perbaiki-error">Perbaiki Error</option>
+                  <option value="refaktor">Refaktor &amp; Rapikan Kode</option>
+                  <option value="audit-keamanan">Audit Keamanan &amp; Performa</option>
+                  <option value="optimasi">Optimasi Kecepatan</option>
+                </select>
+              </label>
+              <label style="font-weight: bold; font-size: 0.85em;">Platform / Versi / Locale
+                <input id="gasType" placeholder="Contoh: Google Sheets, Excel 365, locale ID (semicolon)" style="margin-top: 4px;" />
+              </label>
+              <label style="font-weight: bold; font-size: 0.85em;">Deployment Target
+                <input id="gasDeployment" placeholder="Contoh: Web App GAS, Sidebar, Standalone Script" style="margin-top: 4px;" />
+              </label>
+              <label style="font-weight: bold; font-size: 0.85em;">Deskripsi Kebutuhan Lengkap <span style="color:var(--orange);">*</span>
+                <textarea id="gasDesc" placeholder="Jelaskan kebutuhan secara detail:&#10;- Nama Sheet dan kolom-kolomnya&#10;- Pengguna/role yang terlibat&#10;- Fitur yang diinginkan&#10;- Tampilan UI (jika web app/sidebar)&#10;- Kode/error yang ada (jika perbaikan)" style="margin-top: 4px; min-height: 140px;"></textarea>
+              </label>
+              <div style="display: flex; gap: 6px;">
+                <label style="display:flex; align-items:center; gap:4px; font-size:0.8em; font-weight:normal;"><input type="checkbox" id="gasOutCode" checked style="width:auto;margin:0;"> Kode Lengkap</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:0.8em; font-weight:normal;"><input type="checkbox" id="gasOutGuide" checked style="width:auto;margin:0;"> Panduan Deploy</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:0.8em; font-weight:normal;"><input type="checkbox" id="gasOutTest" style="width:auto;margin:0;"> Test Case</label>
+              </div>
+              <button class="primary generate" id="btnGenerateGas" style="padding: 12px;">⚡ Generate Kode</button>
+            </div>
+
+            <!-- Output Kanan -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; gap: 6px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                <button class="nav-tab active" onclick="showGasTab('code')">💻 Kode</button>
+                <button class="nav-tab" onclick="showGasTab('arch')">🏗️ Arsitektur</button>
+                <button class="nav-tab" onclick="showGasTab('guide')">📖 Panduan</button>
+              </div>
+              <div id="gasOutput" class="output" style="flex: 1; min-height: 500px; font-family: monospace; font-size: 0.85em; background: #1a1a2e; color: #e2e2e2; white-space: pre-wrap;">
+// Kode akan muncul di sini setelah Generate.</div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button class="secondary" id="btnCopyGas" style="padding: 8px 12px; font-size: 0.85em;">📋 Salin Kode</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Halaman 10: Excel & Sheets Studio -->
+      <div class="app-page" id="page-excel-studio" style="display: none;">
+        <div class="panel">
+          <h2>📊 Excel & Sheets Studio</h2>
+          <p class="muted">Tulis formula rumit (VLOOKUP, INDEX MATCH, LAMBDA) dan VBA Macro untuk Excel/Google Sheets.</p>
+          <div style="margin-top: 16px; display: grid; grid-template-columns: 340px 1fr; gap: 16px;" class="form-grid-2panel">
+            <div class="panel" style="box-shadow: none; border-color: var(--border); display: flex; flex-direction: column; gap: 10px;">
+              <h3>Generator Formula / VBA</h3>
+              <label style="font-weight: bold;">Gaya Output
+                <select id="excelFormat" style="margin-top:4px;">
+                  <option>Formula Excel (Bahasa Indonesia - Semicolon)</option>
+                  <option>Formula Excel (US/Standard - Comma)</option>
+                  <option>VBA Macro Script</option>
+                  <option>Office Scripts (Excel Online)</option>
+                </select>
+              </label>
+              <label style="font-weight: bold;">Tujuan Formula / Logika
+                <textarea id="excelLogic" placeholder="Contoh: Jika nilai di A1 lebih besar dari 75, maka lulus, selain itu tidak lulus..." style="margin-top:4px; min-height: 100px;"></textarea>
+              </label>
+              <button class="primary" id="btnGenerateExcel" style="padding: 10px; margin-top: 8px;">Generate Formula</button>
+            </div>
+            <div class="panel" style="box-shadow: none; border-color: var(--border); display: flex; flex-direction: column; gap: 10px;">
+              <h3>Formula / Script Output</h3>
+              <div id="excelOutput" class="output" style="flex: 1; min-height: 200px;">
+                Formula atau Script VBA Macro akan muncul di sini.
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                <button class="secondary" id="btnCopyExcel" style="padding: 8px 12px;">Salin Hasil</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman 11: Word & Docs Studio -->
+      <div class="app-page" id="page-word-studio" style="display: none;">
+        <div class="panel">
+          <h2>📝 Word & Docs Studio</h2>
+          <p class="muted">Template dokumen administrasi madrasah dan pembuat struktur surat kedinasan otomatis.</p>
+          <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;" class="form-grid-3panel">
+            <div class="panel" style="box-shadow: none; border-color: var(--border); text-align: center; padding: 20px;">
+              <span style="font-size: 2.5em;">📄</span>
+              <h3 style="margin-top: 10px;">SK Pembagian Tugas</h3>
+              <p class="muted" style="font-size: 0.85em; margin: 8px 0 14px;">Surat Keputusan Kepala Madrasah tentang beban mengajar guru.</p>
+              <button class="primary btnWordTmpl" data-tmpl="sk-tugas" style="padding: 8px 14px;">Pakai Template</button>
+            </div>
+            <div class="panel" style="box-shadow: none; border-color: var(--border); text-align: center; padding: 20px;">
+              <span style="font-size: 2.5em;">✉️</span>
+              <h3 style="margin-top: 10px;">Surat Undangan Wali Murid</h3>
+              <p class="muted" style="font-size: 0.85em; margin: 8px 0 14px;">Surat pemberitahuan rapat komite madrasah / wali murid.</p>
+              <button class="primary btnWordTmpl" data-tmpl="surat-undangan" style="padding: 8px 14px;">Pakai Template</button>
+            </div>
+            <div class="panel" style="box-shadow: none; border-color: var(--border); text-align: center; padding: 20px;">
+              <span style="font-size: 2.5em;">📋</span>
+              <h3 style="margin-top: 10px;">Format Laporan LPJ</h3>
+              <p class="muted" style="font-size: 0.85em; margin: 8px 0 14px;">Format draf laporan keuangan pertanggungjawaban dana BOS.</p>
+              <button class="primary btnWordTmpl" data-tmpl="lpj-bos" style="padding: 8px 14px;">Pakai Template</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman 12: Code Reviewer -->
+      <div class="app-page" id="page-code-reviewer" style="display: none;">
+        <div class="panel">
+          <h2>🛡️ Code Reviewer & Security Audit</h2>
+          <p class="muted">Audit kode program Anda (PHP, JavaScript, Python, Dart) untuk menemukan celah keamanan (OWASP Top 10) atau bug.</p>
+          <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;" class="form-grid-2panel">
+            <div class="panel" style="box-shadow: none; border-color: var(--border); display: flex; flex-direction: column; gap: 10px;">
+              <h3>Kode yang akan Diaudit</h3>
+              <textarea id="codeReviewInput" placeholder="Tempel kode Anda di sini... Contoh: $sql = 'SELECT * FROM users WHERE id = ' . $_GET['id'];" style="flex: 1; min-height: 250px; font-family: monospace;"></textarea>
+              <button class="primary" id="btnAuditCode" style="padding: 10px 14px; margin-top: 8px;">Jalankan Security Audit</button>
+            </div>
+            <div class="panel" style="box-shadow: none; border-color: var(--border); display: flex; flex-direction: column; gap: 10px;">
+              <h3>Hasil Temuan Review</h3>
+              <div id="codeReviewOutput" class="output" style="flex: 1; min-height: 250px;">
+                Analisis celah keamanan, nilai keparahan (High/Medium/Low), dan saran patch perbaikan kode akan muncul di sini.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman 13: Publishing Center -->
+      <div class="app-page" id="page-publishing" style="display: none;">
+        <div class="panel">
+          <h2>🏛️ Publishing Center</h2>
+          <p class="muted">Periksa kesiapan naskah buku Anda sebelum dikirim ke penerbit atau diunggah ke repositori madrasah.</p>
+          <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;" class="form-grid-2panel">
+            <div class="panel" style="box-shadow: none; border-color: var(--border);">
+              <h3>Pemeriksaan Kelayakan Naskah</h3>
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                  <input type="checkbox" id="pubCheck1" style="width: auto; margin: 0;" />
+                  Struktur Bab Lengkap (Pendahuluan - Penutup)
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                  <input type="checkbox" id="pubCheck2" style="width: auto; margin: 0;" />
+                  Semua kutipan Al-Qur'an & Hadis terverifikasi (bebas halusinasi)
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                  <input type="checkbox" id="pubCheck3" style="width: auto; margin: 0;" />
+                  Pengecekan orisinalitas naskah (bebas plagiarisme)
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                  <input type="checkbox" id="pubCheck4" style="width: auto; margin: 0;" />
+                  Daftar Pustaka terformat dengan benar (APA / Chicago)
+                </label>
+                <button class="primary" id="btnVerifyPublishing" style="padding: 10px 14px; margin-top: 8px;">Cek Kesiapan Naskah</button>
+              </div>
+            </div>
+            <div class="panel" style="box-shadow: none; border-color: var(--border); display: flex; flex-direction: column; gap: 10px;">
+              <h3>Status Verifikasi Akhir</h3>
+              <div id="publishingOutput" class="output" style="flex: 1; min-height: 180px;">
+                Hasil audit kelayakan penerbitan dan cetak akan muncul di sini.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman 14: Source-Grounded Research (RAG) -->
+      <div class="app-page" id="page-rag-research" style="display: none;">
+        <div class="panel">
+          <h2>🔬 Source-Grounded Research (RAG)</h2>
+          <p class="muted">Tanyakan apa pun langsung ke dokumen referensi yang telah Anda unggah (PDF, Word, TXT) untuk mendapatkan jawaban berbasis bukti.</p>
+          <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr; gap: 16px;">
+            <div class="panel" style="box-shadow: none; border-color: var(--border); display: flex; flex-direction: column; gap: 10px;">
+              <h3>Tanyakan kepada Pustaka Dokumen Anda</h3>
+              <div style="display: flex; gap: 10px;">
+                <input id="ragQueryInput" placeholder="Contoh: Apa saja pilar tata kelola pesantren menurut dokumen A?" style="flex: 1; margin: 0;" />
+                <button class="primary generate" id="btnExecuteRag" style="padding: 10px 20px;">Tanya AI</button>
+              </div>
+              <div id="ragResultOutput" class="output" style="min-height: 200px; margin-top: 10px;">
+                Jawaban AI yang didasarkan langsung pada berkas referensi Anda beserta kutipan halaman/baris akan ditampilkan di sini.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Halaman Lainnya (Placeholders) -->
+      <div class="app-page" id="page-pustaka-ref" style="display: none;">
+        <div class="panel">
+          <h2>📖 Pustaka Referensi</h2>
+          <p class="muted">Manajemen pustaka sitasi RIS/BibTeX untuk riset akademik Anda.</p>
+          <div class="output" style="min-height: 200px;">Belum ada daftar pustaka yang diunggah.</div>
+        </div>
+      </div>
+      <div class="app-page" id="page-templates" style="display: none;">
+        <div class="panel">
+          <h2>▦ Template Dokumen</h2>
+          <p class="muted">Pilih template struktur karya tulis dan administrasi.</p>
+          <div class="output" style="min-height: 200px;">Daftar template dokumen madrasah dan karya ilmiah.</div>
+        </div>
+      </div>
+      <div class="app-page" id="page-storage" style="display: none;">
+        <div class="panel">
+          <h2>☁️ Penyimpanan Cloud</h2>
+          <p class="muted">Kelola berkas referensi yang Anda unggah ke server.</p>
+          <div class="output" style="min-height: 200px;">Total penyimpanan terpakai: 0 KB dari 100 MB.</div>
+        </div>
+      </div>
+      <div class="app-page" id="page-history-page" style="display: none;">
+        <div class="panel">
+          <h2>⏱️ Riwayat Permintaan</h2>
+          <p class="muted">Daftar lengkap riwayat prompt dan generasi AI sebelumnya.</p>
+          <div class="output" style="min-height: 200px;">Daftar riwayat lengkap tersinkronisasi.</div>
+        </div>
+      </div>
+      <div class="app-page" id="page-settings-ai" style="display: none;">
+        <div class="panel">
+          <h2>⚙️ Pengaturan AI</h2>
+          <p class="muted">Konfigurasi kunci API, model GPT pilihan, dan alokasi kuota bulanan.</p>
+          <div class="output" style="min-height: 200px;">Konfigurasi default menggunakan GPT-4o-mini dari server proxy.</div>
+        </div>
+      </div>
+      <div class="app-page" id="page-profile" style="display: none;">
+        <div class="panel">
+          <h2>👤 Profil Pengguna</h2>
+          <p class="muted">Informasi akun Hidayat AI Workspace.</p>
+          <div class="output" style="min-height: 200px;">
+            Nama: Hidayat, M.Pd.<br>
+            Email: hidayat@gmail.com<br>
+            Role: Author (Penulis Buku)
+          </div>
+        </div>
+      </div>
+      <div class="app-page" id="page-help" style="display: none;">
+        <div class="panel">
+          <h2>❓ Bantuan & Dokumentasi</h2>
+          <p class="muted">Panduan penggunaan Hidayat AI Workspace.</p>
+          <div class="output" style="min-height: 200px;">Hubungi tim admin madrasah jika ada kendala sistem.</div>
         </div>
       </div>
 
