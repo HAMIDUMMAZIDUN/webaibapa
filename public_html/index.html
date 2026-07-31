@@ -1001,6 +1001,43 @@
     </main>
   </div><!-- /app-shell -->
 
+  <!-- Update Terbaru Modal -->
+  <dialog id="updateModal" style="border: none; border-radius: 12px; padding: 0; box-shadow: 0 10px 25px rgba(0,0,0,0.15); width: 90%; max-width: 500px; background: #fff; overflow: hidden; margin: auto;">
+    <div style="background: linear-gradient(135deg, #071d4a 0%, #092b6d 100%); color: #fff; padding: 20px; text-align: center; position: relative;">
+      <h2 style="margin: 0; font-size: 1.4em; font-weight: 700;">✨ Pembaruan Terbaru</h2>
+      <p style="margin: 5px 0 0; font-size: 0.9em; opacity: 0.9;">Hidayat AI Workspace v1.2</p>
+      <button onclick="document.getElementById('updateModal').close()" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+    </div>
+    <div style="padding: 24px; color: #334155;">
+      <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px;">
+        <li style="display: flex; gap: 12px; align-items: flex-start;">
+          <span style="font-size: 1.5em; background: #e0f2fe; color: #0284c7; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">🖼️</span>
+          <div>
+            <strong style="color: #0f172a; display: block; margin-bottom: 4px;">Dukungan Format Gambar</strong>
+            <span style="font-size: 0.9em; line-height: 1.4;">Sekarang Anda bisa mengunggah file gambar (JPG, PNG) untuk analisis referensi cerdas oleh AI.</span>
+          </div>
+        </li>
+        <li style="display: flex; gap: 12px; align-items: flex-start;">
+          <span style="font-size: 1.5em; background: #fef3c7; color: #d97706; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">🎨</span>
+          <div>
+            <strong style="color: #0f172a; display: block; margin-bottom: 4px;">Desain UI Lebih Segar</strong>
+            <span style="font-size: 0.9em; line-height: 1.4;">Pembenahan antarmuka (UI) profesional untuk memastikan kenyamanan Anda saat bekerja.</span>
+          </div>
+        </li>
+        <li style="display: flex; gap: 12px; align-items: flex-start;">
+          <span style="font-size: 1.5em; background: #dcfce7; color: #16a34a; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">🚀</span>
+          <div>
+            <strong style="color: #0f172a; display: block; margin-bottom: 4px;">Peningkatan Performa</strong>
+            <span style="font-size: 0.9em; line-height: 1.4;">Navigasi modul lebih cepat, tanpa delay saat memuat data dan riwayat proyek.</span>
+          </div>
+        </li>
+      </ul>
+      <div style="margin-top: 24px; text-align: center;">
+        <button class="primary" onclick="document.getElementById('updateModal').close()" style="width: 100%; padding: 12px; font-size: 1em; border-radius: 8px; background: #0b2d70;">Lanjutkan ke Workspace</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Preview Modal -->
   <div id="filePreviewModal" class="hidden">
     <div class="preview-dialog">

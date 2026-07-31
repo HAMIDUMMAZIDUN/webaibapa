@@ -157,6 +157,14 @@ async function init(){
   
   await renderProjects(); await renderHistory(); await renderDocuments(); await renderStats(); bind(); initUpload(); initModuleUpload();
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+  // Tampilkan modal update terbaru saat dibuka
+  setTimeout(() => {
+    const updateModal = document.getElementById('updateModal');
+    if (updateModal && typeof updateModal.showModal === 'function') {
+      updateModal.showModal();
+    }
+  }, 800);
 }
 
 function bind(){
