@@ -154,7 +154,7 @@ async function init(){
   
   await syncLocalStorageToSupabase();
   
-  await renderProjects(); await renderHistory(); await renderDocuments(); await renderStats(); bind(); initUpload();
+  await renderProjects(); await renderHistory(); await renderDocuments(); await renderStats(); bind(); initUpload(); initModuleUpload();
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 
@@ -496,6 +496,7 @@ window.switchToPage = function(pageId) {
   }
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  injectUploadBar(pageId);
 };
 
 // ----------------------------------------------------
@@ -1931,7 +1932,243 @@ function initUpload() {
   });
 }
 
-let extractedImages = [];
+// ─── UNIVERSAL UPLOAD BAR ───────────────────────────────────────
+// Pages that should NOT get the upload bar (they already have their own or don't need it)
+const PAGES_NO_UPLOAD = new Set(['dashboard', 'generator', 'auth']);
+
+// Per-page uploaded file list: { pageId -> [{name, content, type, imageSrc?}] }
+const pageFilesMap = {};
+
+// Single shared hidden file input for all module pages
+let moduleFileInput = null;
+let activeUploadPageId = null;
+
+function initModuleUpload() {
+  moduleFileInput = document.createElement('input');
+  moduleFileInput.type = 'file';
+  moduleFileInput.accept = '.txt,.csv,.pdf,.docx,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg';
+  moduleFileInput.multiple = true;
+  moduleFileInput.style.display = 'none';
+  document.body.appendChild(moduleFileInput);
+
+  moduleFileInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length || !activeUploadPageId) return;
+    for (const file of files) {
+      await processModuleFile(file, activeUploadPageId);
+    }
+    renderUploadBar(activeUploadPageId);
+    moduleFileInput.value = '';
+  });
+}
+
+async function processModuleFile(file, pageId) {
+  toast(`Membaca "${file.name}"...`, 'ok');
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+    let entry = { name: file.name, type: 'file', content: '' };
+
+    if (['txt', 'csv'].includes(ext)) {
+      entry.content = await file.text();
+    } else if (ext === 'pdf') {
+      entry.content = await parsePdf(file);
+      entry.rawFile = file; // keep reference for PDF preview rendering
+    } else if (ext === 'docx') {
+      entry.content = await parseDocx(file);
+    } else if (ext === 'xlsx') {
+      entry.content = await parseXlsx(file);
+    } else if (['jpg','jpeg','png','gif','webp','bmp','svg'].includes(ext)) {
+      const dataUrl = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      entry.type = 'image';
+      entry.imageSrc = dataUrl;
+      entry.content = `[Gambar: ${file.name}]`;
+    } else {
+      throw new Error('Format tidak didukung.');
+    }
+
+    if (!entry.content.trim()) throw new Error('File kosong atau tidak dapat diekstrak.');
+
+    const max = 150000;
+    if (entry.content.length > max) entry.content = entry.content.substring(0, max);
+
+    if (!pageFilesMap[pageId]) pageFilesMap[pageId] = [];
+    pageFilesMap[pageId].push(entry);
+    toast(`"${file.name}" berhasil ditambahkan.`);
+  } catch (err) {
+    toast(`Gagal: ${err.message}`, 'error');
+  }
+}
+
+function renderUploadBar(pageId) {
+  const bar = document.getElementById(`upload-bar-${pageId}`);
+  if (!bar) return;
+  const files = pageFilesMap[pageId] || [];
+  const tagsEl = bar.querySelector('.upload-bar-files');
+  if (!tagsEl) return;
+  tagsEl.innerHTML = files.length === 0
+    ? `<span style="font-size:12px;color:var(--muted)">Belum ada file — klik Upload</span>`
+    : files.map((f, i) => `
+        <div class="upload-bar-tag">
+          <span class="preview-link" title="Klik untuk preview" onclick="openFilePreview('${pageId}',${i})">
+            ${f.type === 'image' ? '&#128247;' : '&#128196;'} ${escapeHTML(f.name)}
+          </span>
+          <button onclick="removeModuleFile('${pageId}',${i})" title="Hapus">&#10005;</button>
+        </div>`).join('');
+}
+
+window.removeModuleFile = function(pageId, idx) {
+  if (pageFilesMap[pageId]) pageFilesMap[pageId].splice(idx, 1);
+  renderUploadBar(pageId);
+};
+
+// ─── FILE PREVIEW SYSTEM ───────────────────────────────────────
+window.openFilePreview = async function(pageId, idx) {
+  const files = pageFilesMap[pageId] || [];
+  const f = files[idx];
+  if (!f) return;
+
+  const modal = document.getElementById('filePreviewModal');
+  const title = document.getElementById('previewTitle');
+  const body  = document.getElementById('previewBody');
+
+  title.textContent = f.name;
+  body.innerHTML = '<div class="pdf-loading">Memuat preview...</div>';
+  modal.classList.remove('hidden');
+
+  const ext = f.name.split('.').pop().toLowerCase();
+
+  // IMAGE
+  if (['jpg','jpeg','png','gif','webp','bmp','svg'].includes(ext)) {
+    body.innerHTML = `<img src="${f.imageSrc}" alt="${escapeHTML(f.name)}" />`;
+    return;
+  }
+
+  // PDF — re-render from stored raw file (store rawFile reference)
+  if (ext === 'pdf' && f.rawFile) {
+    await renderPdfPreview(f.rawFile, body);
+    return;
+  }
+
+  // TEXT / CSV / DOCX-text / XLSX-text
+  if (f.content) {
+    const label = ext === 'xlsx' ? 'Konten Spreadsheet' : ext === 'docx' ? 'Konten Dokumen' : 'Konten Teks';
+    body.innerHTML = `
+      <div style="width:100%;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${label} — ${escapeHTML(f.name)}</div>
+        <div class="preview-text">${escapeHTML(f.content)}</div>
+      </div>`;
+    return;
+  }
+
+  body.innerHTML = '<div class="pdf-loading">Preview tidak tersedia untuk format ini.</div>';
+};
+
+window.closeFilePreview = function() {
+  const modal = document.getElementById('filePreviewModal');
+  if (modal) modal.classList.add('hidden');
+};
+
+// Close modal when clicking outside the dialog
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('filePreviewModal');
+  if (modal && !modal.classList.contains('hidden') && e.target === modal) {
+    modal.classList.add('hidden');
+  }
+});
+
+// Close with Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('filePreviewModal');
+    if (modal && !modal.classList.contains('hidden')) modal.classList.add('hidden');
+  }
+});
+
+async function renderPdfPreview(file, bodyEl) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const maxPages = Math.min(pdf.numPages, 10); // Preview max 10 pages
+
+    const wrap = document.createElement('div');
+    wrap.className = 'pdf-pages-wrap';
+
+    const info = document.createElement('div');
+    info.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:4px;';
+    info.textContent = `${pdf.numPages} halaman${pdf.numPages > 10 ? ' (menampilkan 10 pertama)' : ''}`;
+    wrap.appendChild(info);
+
+    bodyEl.innerHTML = '';
+    bodyEl.appendChild(wrap);
+
+    for (let p = 1; p <= maxPages; p++) {
+      const page = await pdf.getPage(p);
+      const viewport = page.getViewport({ scale: 1.4 });
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'pdf-page-canvas';
+      canvas.width  = viewport.width;
+      canvas.height = viewport.height;
+
+      const label = document.createElement('div');
+      label.className = 'pdf-page-label';
+      label.textContent = `Halaman ${p}`;
+
+      wrap.appendChild(canvas);
+      wrap.appendChild(label);
+
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    }
+  } catch(err) {
+    bodyEl.innerHTML = `<div class="pdf-loading">Gagal merender PDF: ${err.message}</div>`;
+  }
+}
+
+// Returns context string from all uploaded files for the given page (to prepend to prompts)
+window.getModuleFileContext = function(pageId) {
+  const files = pageFilesMap[pageId] || [];
+  if (!files.length) return '';
+  return files.map(f => {
+    if (f.type === 'image') return `[Gambar Referensi: ${f.name}]\n`;
+    return `[Dokumen: ${f.name}]\n${'='.repeat(40)}\n${f.content}\n${'='.repeat(40)}\n\n`;
+  }).join('');
+};
+
+function injectUploadBar(pageId) {
+  if (PAGES_NO_UPLOAD.has(pageId)) return;
+  const page = document.getElementById(`page-${pageId}`);
+  if (!page) return;
+  if (document.getElementById(`upload-bar-${pageId}`)) {
+    renderUploadBar(pageId); // already injected, just refresh tags
+    return;
+  }
+
+  const bar = document.createElement('div');
+  bar.className = 'upload-bar';
+  bar.id = `upload-bar-${pageId}`;
+  bar.innerHTML = `
+    <span class="upload-bar-label">Unggah Referensi:</span>
+    <button class="upload-bar-btn" onclick="triggerModuleUpload('${pageId}')">
+      &#128203; Upload File
+    </button>
+    <div class="upload-bar-files">
+      <span style="font-size:12px;color:var(--muted)">Belum ada file — klik Upload</span>
+    </div>`;
+
+  // Insert as first child of the page div (above all content)
+  page.insertBefore(bar, page.firstChild);
+}
+
+window.triggerModuleUpload = function(pageId) {
+  activeUploadPageId = pageId;
+  if (moduleFileInput) moduleFileInput.click();
+};
+
 let referencesList = [];
 
 function renderReferences() {

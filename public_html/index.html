@@ -3,9 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b2d70">
+  <meta name="theme-color" content="#111827">
   <meta name="description" content="Hidayat AI Workspace — asisten AI akademik, pendidikan, penelitian, dan administrasi.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.openai.com https://*.supabase.co https://id.wikipedia.org https://html.duckduckgo.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com;">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' https://api.openai.com https://*.supabase.co https://id.wikipedia.org https://html.duckduckgo.com https://api.alquran.cloud; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com;">
   <title>Hidayat AI Workspace</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/logo.svg">
@@ -123,81 +126,78 @@
     </div>
   </header>
 
-  <div class="app-shell" style="min-height: calc(100vh - 66px); display: flex;">
-    <!-- Sidebar Kiri Modular -->
+  <div class="app-shell">
+    <!-- Sidebar -->
     <aside id="sidebar" class="sidebar">
-      <nav style="display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: calc(100vh - 180px); padding-right: 4px;">
-        <button class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span> Beranda</button>
-        <button class="nav-item" data-page="generator"><span class="nav-icon">🧠</span> AI Workspace</button>
+      <div class="sidebar-brand">
+        <strong>Hidayat AI</strong>
+        <span>Workspace Akademik</span>
+      </div>
+      <nav>
+        <button class="nav-item active" data-page="dashboard"><span class="nav-icon">&#8962;</span> Beranda</button>
+        <button class="nav-item" data-page="generator"><span class="nav-icon">&#9881;</span> AI Workspace</button>
 
-        <!-- PENULISAN & PENERBITAN -->
-        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">✍️ Penulisan & Penerbitan</div>
-        <button class="nav-item" data-page="author-studio"><span class="nav-icon">✍️</span> Author Studio</button>
-        <button class="nav-item" data-page="curriculum"><span class="nav-icon">🗺️</span> Curriculum Mapper</button>
-        <button class="nav-item" data-page="publishing"><span class="nav-icon">🏛️</span> Publishing Center</button>
+        <div class="nav-section">Penulisan</div>
+        <button class="nav-item" data-page="author-studio"><span class="nav-icon">&#9998;</span> Author Studio</button>
+        <button class="nav-item" data-page="curriculum"><span class="nav-icon">&#9741;</span> Curriculum</button>
+        <button class="nav-item" data-page="publishing"><span class="nav-icon">&#9744;</span> Publishing</button>
 
-        <!-- REFERENSI ISLAM -->
-        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">📖 Referensi Islam</div>
-        <button class="nav-item" data-page="quran"><span class="nav-icon">📖</span> Qur'an &amp; Tafsir</button>
-        <button class="nav-item" data-page="hadith"><span class="nav-icon">🔍</span> Verifikasi Hadis</button>
-        <button class="nav-item" data-page="kitab"><span class="nav-icon">📚</span> Perpustakaan Kitab</button>
-        <button class="nav-item" data-page="dawah"><span class="nav-icon">🎙️</span> Da'wah Studio</button>
+        <div class="nav-section">Referensi Islam</div>
+        <button class="nav-item" data-page="quran"><span class="nav-icon">&#9635;</span> Qur'an &amp; Tafsir</button>
+        <button class="nav-item" data-page="hadith"><span class="nav-icon">&#9740;</span> Verifikasi Hadis</button>
+        <button class="nav-item" data-page="kitab"><span class="nav-icon">&#9636;</span> Perpustakaan Kitab</button>
+        <button class="nav-item" data-page="dawah"><span class="nav-icon">&#9673;</span> Da'wah Studio</button>
 
-        <!-- KODING & OTOMASI -->
-        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">⚡ Koding &amp; Otomasi</div>
-        <button class="nav-item" data-page="gas"><span class="nav-icon">⚡</span> Apps Script Builder</button>
-        <button class="nav-item" data-page="excel-studio"><span class="nav-icon">📊</span> Excel &amp; Sheets</button>
-        <button class="nav-item" data-page="word-studio"><span class="nav-icon">📝</span> Word &amp; Docs</button>
-        <button class="nav-item" data-page="code-reviewer"><span class="nav-icon">🛡️</span> Code Reviewer</button>
+        <div class="nav-section">Koding &amp; Otomasi</div>
+        <button class="nav-item" data-page="gas"><span class="nav-icon">&#9889;</span> Apps Script</button>
+        <button class="nav-item" data-page="excel-studio"><span class="nav-icon">&#9783;</span> Excel &amp; Sheets</button>
+        <button class="nav-item" data-page="word-studio"><span class="nav-icon">&#9999;</span> Word &amp; Docs</button>
+        <button class="nav-item" data-page="code-reviewer"><span class="nav-icon">&#9654;</span> Code Reviewer</button>
 
-        <!-- RISET & SUMBER -->
-        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">🔬 Riset &amp; Sumber</div>
-        <button class="nav-item" data-page="rag-research"><span class="nav-icon">🔬</span> RAG Research</button>
-        <button class="nav-item" data-page="pustaka-ref"><span class="nav-icon">🗂️</span> Pustaka Referensi</button>
+        <div class="nav-section">Riset &amp; Sumber</div>
+        <button class="nav-item" data-page="rag-research"><span class="nav-icon">&#9740;</span> RAG Research</button>
+        <button class="nav-item" data-page="pustaka-ref"><span class="nav-icon">&#9783;</span> Pustaka</button>
 
-        <!-- MANAJEMEN -->
-        <div style="margin: 8px 0 4px; padding: 0 8px; font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase;">📁 Manajemen</div>
-        <button class="nav-item" data-page="projects"><span class="nav-icon">📁</span> Proyek Saya</button>
-        <button class="nav-item" data-page="templates"><span class="nav-icon">▦</span> Template</button>
-        <button class="nav-item" data-page="storage"><span class="nav-icon">☁️</span> Penyimpanan</button>
-        <button class="nav-item" data-page="history-page"><span class="nav-icon">⏱️</span> Riwayat</button>
-        <button class="nav-item" data-page="settings-ai"><span class="nav-icon">⚙️</span> Pengaturan AI</button>
-        <button class="nav-item" data-page="profile"><span class="nav-icon">👤</span> Profil</button>
-        <button class="nav-item" data-page="help"><span class="nav-icon">❓</span> Bantuan</button>
+        <div class="nav-section">Manajemen</div>
+        <button class="nav-item" data-page="projects"><span class="nav-icon">&#9636;</span> Proyek Saya</button>
+        <button class="nav-item" data-page="templates"><span class="nav-icon">&#9783;</span> Template</button>
+        <button class="nav-item" data-page="history-page"><span class="nav-icon">&#9719;</span> Riwayat</button>
+        <button class="nav-item" data-page="settings-ai"><span class="nav-icon">&#9881;</span> Pengaturan</button>
+        <button class="nav-item" data-page="profile"><span class="nav-icon">&#9711;</span> Profil</button>
+        <button class="nav-item" data-page="help"><span class="nav-icon">&#63;</span> Bantuan</button>
       </nav>
-      <div style="margin-top: 14px; border: 1px solid rgba(255,255,255,0.15); background: linear-gradient(135deg, #1e3a8a, #3b82f6); border-radius: 12px; padding: 12px; display: flex; gap: 10px; align-items: center;">
-        <span style="font-size: 20px;">👑</span>
-        <div>
-          <strong style="font-size: 0.85em; color: #fff;">Versi Premium</strong>
-          <small style="font-size: 0.72em; color: #d9e6ff; display: block; margin-top: 2px;">Akses fitur tak terbatas</small>
-        </div>
+      <div class="sidebar-footer">
+        <strong>Versi Premium</strong>
+        <small>Akses fitur tak terbatas</small>
       </div>
     </aside>
 
-    <main class="main" style="flex: 1; min-width: 0; padding: 20px 24px; box-sizing: border-box;">
+    <main class="main">
+      <div class="content">
       
       <!-- Halaman 1: Beranda / Dashboard -->
       <div class="app-page" id="page-dashboard">
-        <div class="hero" style="margin-bottom: 20px;">
+        <div class="hero">
           <div>
-            <span class="eyebrow">ASISTEN AI TERPADU</span>
-            <h1>Selamat Datang, Hidayat 👋</h1>
-            <p>Kelola disertasi, jurnal, penelitian, pembelajaran, administrasi, presentasi, dan desain dalam satu aplikasi.</p>
-            <button class="primary" onclick="switchToPage('generator')">Mulai Sekarang →</button>
+            <span class="eyebrow">Asisten AI Terpadu</span>
+            <h1>Selamat Datang, Hidayat</h1>
+            <p>Kelola disertasi, jurnal, penelitian, pembelajaran, administrasi, dan lebih banyak lagi dalam satu workspace.</p>
+            <button class="primary" onclick="switchToPage('generator')" style="margin-top:14px">Mulai Sekarang &rarr;</button>
           </div>
           <div class="hero-art">
-            <div class="ai-chip">AI</div>
-            <div class="laptop">▦<small>Smart Workspace</small></div>
-            <div class="books">▰<br>▰<br>▰</div>
+            <div class="hero-badge">
+              <span class="badge-icon">&#9881;</span>
+              <span>AI Workspace</span>
+            </div>
           </div>
         </div>
 
-        <section class="stats" id="stats" style="margin-bottom: 20px;"></section>
+        <section class="stats" id="stats"></section>
 
-        <section class="panel features" style="margin-bottom: 20px;">
+        <section class="panel features">
           <div class="panel-head compact">
             <h2>Fitur Unggulan</h2>
-            <span>Pilih kategori untuk mulai membuat dokumen dengan AI</span>
+            <span>Pilih modul untuk memulai</span>
           </div>
           <div id="features" class="feature-grid"></div>
         </section>
@@ -997,6 +997,22 @@
       </div>
     </form>
   </dialog>
+      </div><!-- /content -->
+    </main>
+  </div><!-- /app-shell -->
+
+  <!-- Preview Modal -->
+  <div id="filePreviewModal" class="hidden">
+    <div class="preview-dialog">
+      <div class="preview-header">
+        <h3 id="previewTitle">Preview</h3>
+        <button class="preview-close" onclick="closeFilePreview()">&#10005; Tutup</button>
+      </div>
+      <div class="preview-body" id="previewBody">
+        <div class="pdf-loading">Memuat preview...</div>
+      </div>
+    </div>
+  </div>
 
   <!-- Library untuk membaca dokumen di client-side -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
