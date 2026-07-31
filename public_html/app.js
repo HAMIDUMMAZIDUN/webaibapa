@@ -35,6 +35,7 @@ const escapeHTML = text => text.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;
 
 let db = null;
 let dbAuthenticated = false;
+let extractedImages = [];
 
 async function isDbReady() {
   if (!db) return false;
